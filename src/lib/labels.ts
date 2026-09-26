@@ -3,6 +3,7 @@ const labels: Record<string, string> = {
   clients: "Clients",
   tasks: "Taches",
   projects: "Projets",
+  realized_projects: "Projets realises",
   payments: "Paiements",
   interactions: "Échanges",
   profiles: "Utilisateurs",

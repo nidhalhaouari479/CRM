@@ -74,6 +74,21 @@ export interface Project {
   profiles?: Pick<Profile, "first_name" | "last_name"> | null;
 }
 
+export interface RealizedProject {
+  id: string;
+  name: string;
+  stacks: string[];
+  description: string;
+  project_year: number;
+  client_name: string;
+  project_url: string | null;
+  github_url: string | null;
+  image_urls: string[];
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Interaction {
   id: string;
   client_id: string;

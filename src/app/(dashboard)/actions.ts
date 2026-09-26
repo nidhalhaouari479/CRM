@@ -13,10 +13,21 @@ const text = (value: FormDataEntryValue | null) => String(value ?? "").trim();
 const nullable = (value: FormDataEntryValue | null) => text(value) || null;
 const numberOrNull = (value: FormDataEntryValue | null) =>
   text(value) ? Number(value) : null;
+const textList = (values: FormDataEntryValue[]) =>
+  values.map((value) => String(value).trim()).filter(Boolean);
 const isMissingColumnError = (error: { code?: string; message?: string }) =>
   error.code === "PGRST204" ||
   error.message?.includes("schema cache") ||
   error.message?.includes("submission_key");
+const urlOrVisibilityStatus = z
+  .string()
+  .refine(
+    (value) =>
+      value === "In Progress" ||
+      value === "Private" ||
+      z.url().safeParse(value).success,
+    "Saisissez une URL valide, In Progress ou Private.",
+  );
 
 async function createNotifications(
   notifications: {
@@ -392,6 +403,52 @@ export async function createProject(formData: FormData) {
   revalidatePath(`/clients/${clientId}`);
   revalidatePath("/projects");
   redirect(`/projects/${data.id}`);
+}
+
+export async function createRealizedProject(formData: FormData) {
+  const profile = await requireAdmin();
+  const values = {
+    name: text(formData.get("name")),
+    stacks: textList(formData.getAll("stacks")),
+    description: text(formData.get("description")),
+    project_year: Number(formData.get("project_year")),
+    client_name: text(formData.get("client_name")),
+    project_url: nullable(formData.get("project_url")),
+    github_url: nullable(formData.get("github_url")),
+    image_urls: textList(formData.getAll("image_urls")),
+    created_by: profile.id,
+  };
+  const validation = z
+    .object({
+      name: z.string().min(2, "Le nom du projet est obligatoire."),
+      stacks: z
+        .array(z.string().min(1))
+        .min(1, "Ajoutez au moins une stack."),
+      description: z.string().min(5, "La description est trop courte."),
+      project_year: z
+        .number()
+        .int()
+        .min(1990)
+        .max(new Date().getFullYear() + 10),
+      client_name: z.string().min(2, "Le nom du client est obligatoire."),
+      project_url: urlOrVisibilityStatus.nullable(),
+      github_url: urlOrVisibilityStatus.nullable(),
+      image_urls: z.array(urlOrVisibilityStatus).max(30),
+      created_by: z.uuid(),
+    })
+    .safeParse(values);
+  if (!validation.success) {
+    throw new Error(
+      validation.error.issues[0]?.message ??
+        "Verifiez les informations du projet realise.",
+    );
+  }
+  const supabase = await createServerClient();
+  const { error } = await supabase
+    .from("realized_projects")
+    .insert(validation.data);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/realized-projects");
 }
 
 export async function createPayment(formData: FormData) {

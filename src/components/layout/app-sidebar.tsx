@@ -9,6 +9,7 @@ import {
   Building2,
   Contact,
   Gift,
+  Images,
   LayoutDashboard,
   ListChecks,
   MessageSquareText,
@@ -39,6 +40,7 @@ const adminNav = [
   { href: "/interactions", label: "Interactions", icon: MessageSquareText },
   { href: "/admin/reclamations", label: "Reclamations", icon: MessageSquareWarning },
   { href: "/admin/employees", label: "Employés", icon: Users },
+  { href: "/admin/realized-projects", label: "Projets realises", icon: Images },
   {
     href: "/admin/commission-rules",
     label: "Commissions",
