@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   const { data, error } = await supabase
     .from("realized_projects")
     .select(
-      "id,name,stacks,description,project_year,client_name,project_url,github_url,image_urls,created_at,updated_at",
+      "id,name,name_fr,name_en,name_it,categories,stacks,description,description_fr,description_en,description_it,project_year,client_name,project_url,github_url,image_urls,created_at,updated_at",
     )
     .order("project_year", { ascending: false })
     .order("created_at", { ascending: false })

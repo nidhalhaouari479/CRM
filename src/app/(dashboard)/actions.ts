@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requireAdmin, requireProfile } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { REALIZED_PROJECT_CATEGORIES } from "@/lib/types";
 
 z.config(z.locales.fr());
 
@@ -407,10 +408,19 @@ export async function createProject(formData: FormData) {
 
 export async function createRealizedProject(formData: FormData) {
   const profile = await requireAdmin();
+  const nameFr = text(formData.get("name_fr"));
+  const descriptionFr = text(formData.get("description_fr"));
   const values = {
-    name: text(formData.get("name")),
+    name: nameFr,
+    name_fr: nameFr,
+    name_en: text(formData.get("name_en")),
+    name_it: text(formData.get("name_it")),
+    categories: textList(formData.getAll("categories")),
     stacks: textList(formData.getAll("stacks")),
-    description: text(formData.get("description")),
+    description: descriptionFr,
+    description_fr: descriptionFr,
+    description_en: text(formData.get("description_en")),
+    description_it: text(formData.get("description_it")),
     project_year: Number(formData.get("project_year")),
     client_name: text(formData.get("client_name")),
     project_url: nullable(formData.get("project_url")),
@@ -421,10 +431,26 @@ export async function createRealizedProject(formData: FormData) {
   const validation = z
     .object({
       name: z.string().min(2, "Le nom du projet est obligatoire."),
+      name_fr: z.string().min(2, "Le nom du projet FR est obligatoire."),
+      name_en: z.string().min(2, "Le nom du projet EN est obligatoire."),
+      name_it: z.string().min(2, "Le nom du projet IT est obligatoire."),
+      categories: z
+        .array(z.enum(REALIZED_PROJECT_CATEGORIES))
+        .min(1, "Choisissez au moins une categorie.")
+        .max(20),
       stacks: z
         .array(z.string().min(1))
         .min(1, "Ajoutez au moins une stack."),
       description: z.string().min(5, "La description est trop courte."),
+      description_fr: z
+        .string()
+        .min(5, "La description FR est trop courte."),
+      description_en: z
+        .string()
+        .min(5, "La description EN est trop courte."),
+      description_it: z
+        .string()
+        .min(5, "La description IT est trop courte."),
       project_year: z
         .number()
         .int()

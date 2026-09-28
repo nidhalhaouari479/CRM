@@ -77,8 +77,15 @@ export interface Project {
 export interface RealizedProject {
   id: string;
   name: string;
+  name_fr: string;
+  name_en: string;
+  name_it: string;
+  categories: string[];
   stacks: string[];
   description: string;
+  description_fr: string;
+  description_en: string;
+  description_it: string;
   project_year: number;
   client_name: string;
   project_url: string | null;
@@ -88,6 +95,18 @@ export interface RealizedProject {
   created_at: string;
   updated_at: string;
 }
+
+export const REALIZED_PROJECT_CATEGORIES = [
+  "E-commerce",
+  "ERP / CRM",
+  "AI Chatbots",
+  "Websites / Landing Pages",
+  "Mobile Apps / PWA",
+  "Automation",
+  "Dashboards / Data Visualization",
+  "Business Platforms",
+  "Computer Vision",
+] as const;
 
 export interface Interaction {
   id: string;
