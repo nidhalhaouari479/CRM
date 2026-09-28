@@ -1,8 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ImagePlus, Plus, Trash2, UploadCloud, X } from "lucide-react";
-import { createRealizedProject } from "@/app/(dashboard)/actions";
+import { ImagePlus, Pencil, Plus, Trash2, UploadCloud, X } from "lucide-react";
+import {
+  createRealizedProject,
+  updateRealizedProject,
+} from "@/app/(dashboard)/actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,22 +21,30 @@ import { Textarea } from "@/components/ui/textarea";
 import { Field, FormGrid } from "@/components/forms/form-fields";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { createClient } from "@/lib/supabase/client";
-import { REALIZED_PROJECT_CATEGORIES } from "@/lib/types";
+import {
+  REALIZED_PROJECT_CATEGORIES,
+  type RealizedProject,
+} from "@/lib/types";
 
 const REALIZED_PROJECT_IMAGES_BUCKET = "realized-project-images";
+const VISIBILITY_STATUSES = ["Private", "In Progress"] as const;
 
 function DynamicInputs({
   label,
   name,
   placeholder,
   minItems = 1,
+  initialItems,
 }: {
   label: string;
   name: string;
   placeholder: string;
   minItems?: number;
+  initialItems?: string[];
 }) {
-  const [items, setItems] = useState([""]);
+  const [items, setItems] = useState(
+    initialItems?.length ? initialItems : [""],
+  );
   const canRemove = items.length > minItems;
 
   return (
@@ -88,11 +99,21 @@ function fileExtension(file: File) {
 
 function RealizedProjectImagesInput({
   onUploadingChange,
+  initialImageUrls,
 }: {
   onUploadingChange: (uploading: boolean) => void;
+  initialImageUrls?: string[];
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [images, setImages] = useState<{ url: string; name: string }[]>([]);
+  const [images, setImages] = useState<
+    { value: string; label: string; isUrl: boolean }[]
+  >(
+    (initialImageUrls ?? []).map((image, index) => ({
+      value: image,
+      label: image.startsWith("http") ? `Image ${index + 1}` : image,
+      isUrl: image.startsWith("http://") || image.startsWith("https://"),
+    })),
+  );
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
@@ -130,8 +151,9 @@ function RealizedProjectImagesInput({
             .getPublicUrl(path);
 
           return {
-            url: data.publicUrl,
-            name: file.name || "Image",
+            value: data.publicUrl,
+            label: file.name || "Image",
+            isUrl: true,
           };
         }),
       );
@@ -174,6 +196,31 @@ function RealizedProjectImagesInput({
           {uploading ? "Upload..." : "Importer"}
         </Button>
       </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {VISIBILITY_STATUSES.map((status) => (
+          <Button
+            key={status}
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={
+              images.length >= 30 || images.some((image) => image.value === status)
+            }
+            onClick={() =>
+              setImages((current) => [
+                ...current,
+                {
+                  value: status,
+                  label: status,
+                  isUrl: false,
+                },
+              ].slice(0, 30))
+            }
+          >
+            Ajouter {status}
+          </Button>
+        ))}
+      </div>
       <Input
         ref={inputRef}
         type="file"
@@ -182,24 +229,35 @@ function RealizedProjectImagesInput({
         className="hidden"
         onChange={(event) => void uploadFiles(Array.from(event.target.files ?? []))}
       />
-      {images.map((image) => (
-        <input key={image.url} type="hidden" name="image_urls" value={image.url} />
+      {images.map((image, index) => (
+        <input
+          key={`${image.value}-${index}`}
+          type="hidden"
+          name="image_urls"
+          value={image.value}
+        />
       ))}
       {!!images.length && (
         <div className="grid gap-2 sm:grid-cols-2">
-          {images.map((image) => (
+          {images.map((image, index) => (
             <div
-              key={image.url}
+              key={`${image.value}-${image.label}-${index}`}
               className="flex items-center gap-2 rounded-md border p-2"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={image.url}
-                alt={image.name}
-                className="size-12 rounded-md object-cover"
-              />
+              {image.isUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={image.value}
+                  alt={image.label}
+                  className="size-12 rounded-md object-cover"
+                />
+              ) : (
+                <div className="flex size-12 items-center justify-center rounded-md bg-muted text-xs font-medium text-slate-600">
+                  {image.label}
+                </div>
+              )}
               <p className="min-w-0 flex-1 truncate text-sm text-slate-600">
-                {image.name}
+                {image.label}
               </p>
               <Button
                 type="button"
@@ -208,7 +266,7 @@ function RealizedProjectImagesInput({
                 aria-label="Supprimer"
                 onClick={() =>
                   setImages((current) =>
-                    current.filter((item) => item.url !== image.url),
+                    current.filter((_, itemIndex) => itemIndex !== index),
                   )
                 }
               >
@@ -223,8 +281,18 @@ function RealizedProjectImagesInput({
   );
 }
 
-function ProjectCategoriesSelect() {
-  const [categories, setCategories] = useState<string[]>([]);
+function ProjectCategoriesSelect({
+  initialCategories,
+}: {
+  initialCategories?: string[];
+}) {
+  const [categories, setCategories] = useState<string[]>(
+    (initialCategories ?? []).filter((category) =>
+      REALIZED_PROJECT_CATEGORIES.includes(
+        category as (typeof REALIZED_PROJECT_CATEGORIES)[number],
+      ),
+    ),
+  );
   const availableCategories = REALIZED_PROJECT_CATEGORIES.filter(
     (category) => !categories.includes(category),
   );
@@ -283,33 +351,111 @@ function ProjectCategoriesSelect() {
   );
 }
 
-export function RealizedProjectFormDialog() {
+function UrlOrStatusInput({
+  id,
+  name,
+  placeholder,
+  defaultValue,
+}: {
+  id: string;
+  name: string;
+  placeholder: string;
+  defaultValue?: string | null;
+}) {
+  const [mode, setMode] = useState<"url" | (typeof VISIBILITY_STATUSES)[number]>(
+    defaultValue === "Private" || defaultValue === "In Progress"
+      ? defaultValue
+      : "url",
+  );
+
+  return (
+    <div className="grid gap-2">
+      <select
+        className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        value={mode}
+        onChange={(event) =>
+          setMode(event.target.value as typeof mode)
+        }
+      >
+        <option value="url">URL</option>
+        {VISIBILITY_STATUSES.map((status) => (
+          <option key={status} value={status}>
+            {status}
+          </option>
+        ))}
+      </select>
+      {mode === "url" ? (
+        <Input
+          id={id}
+          name={name}
+          placeholder={placeholder}
+          defaultValue={
+            defaultValue &&
+            defaultValue !== "Private" &&
+            defaultValue !== "In Progress"
+              ? defaultValue
+              : ""
+          }
+        />
+      ) : (
+        <input type="hidden" name={name} value={mode} />
+      )}
+    </div>
+  );
+}
+
+export function RealizedProjectFormDialog({
+  project,
+}: {
+  project?: RealizedProject;
+}) {
   const currentYear = new Date().getFullYear();
   const [imagesUploading, setImagesUploading] = useState(false);
+  const isEditing = !!project;
+  const action = isEditing ? updateRealizedProject : createRealizedProject;
+  const submitLabel = isEditing ? "Modifier le projet realise" : "Creer le projet realise";
 
   return (
     <Dialog>
-      <DialogTrigger render={<Button />}>
-        <ImagePlus />
-        Ajouter un projet realise
+      <DialogTrigger render={<Button variant={isEditing ? "outline" : "default"} />}>
+        {isEditing ? <Pencil /> : <ImagePlus />}
+        {isEditing ? "Modifier" : "Ajouter un projet realise"}
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Nouveau projet realise</DialogTitle>
+          <DialogTitle>
+            {isEditing ? "Modifier le projet realise" : "Nouveau projet realise"}
+          </DialogTitle>
           <DialogDescription>
             Ajoutez un projet livre avec ses stacks, liens et visuels.
           </DialogDescription>
         </DialogHeader>
-        <form action={createRealizedProject} className="space-y-5">
+        <form action={action} className="space-y-5">
+          {project?.id && <input type="hidden" name="id" value={project.id} />}
           <FormGrid>
             <Field label="Nom de projet FR" htmlFor="name_fr" required>
-              <Input id="name_fr" name="name_fr" required />
+              <Input
+                id="name_fr"
+                name="name_fr"
+                defaultValue={project?.name_fr || project?.name || ""}
+                required
+              />
             </Field>
             <Field label="Nom de projet EN" htmlFor="name_en" required>
-              <Input id="name_en" name="name_en" required />
+              <Input
+                id="name_en"
+                name="name_en"
+                defaultValue={project?.name_en || project?.name || ""}
+                required
+              />
             </Field>
             <Field label="Nom de projet IT" htmlFor="name_it" required>
-              <Input id="name_it" name="name_it" required />
+              <Input
+                id="name_it"
+                name="name_it"
+                defaultValue={project?.name_it || project?.name || ""}
+                required
+              />
             </Field>
             <Field label="Annee de projet" htmlFor="project_year" required>
               <Input
@@ -318,52 +464,78 @@ export function RealizedProjectFormDialog() {
                 type="number"
                 min="1990"
                 max={currentYear + 10}
-                defaultValue={currentYear}
+                defaultValue={project?.project_year ?? currentYear}
                 required
               />
             </Field>
           </FormGrid>
           <Field label="Nom de client" htmlFor="client_name" required>
-            <Input id="client_name" name="client_name" required />
+            <Input
+              id="client_name"
+              name="client_name"
+              defaultValue={project?.client_name ?? ""}
+              required
+            />
           </Field>
           <Field label="Description FR" htmlFor="description_fr" required>
-            <Textarea id="description_fr" name="description_fr" required />
+            <Textarea
+              id="description_fr"
+              name="description_fr"
+              defaultValue={project?.description_fr || project?.description || ""}
+              required
+            />
           </Field>
           <Field label="Description EN" htmlFor="description_en" required>
-            <Textarea id="description_en" name="description_en" required />
+            <Textarea
+              id="description_en"
+              name="description_en"
+              defaultValue={project?.description_en || project?.description || ""}
+              required
+            />
           </Field>
           <Field label="Description IT" htmlFor="description_it" required>
-            <Textarea id="description_it" name="description_it" required />
+            <Textarea
+              id="description_it"
+              name="description_it"
+              defaultValue={project?.description_it || project?.description || ""}
+              required
+            />
           </Field>
-          <ProjectCategoriesSelect />
+          <ProjectCategoriesSelect initialCategories={project?.categories} />
           <DynamicInputs
             label="Stacks"
             name="stacks"
             placeholder="React, Next.js, Supabase..."
+            initialItems={project?.stacks}
           />
           <FormGrid>
             <Field label="Lien de site" htmlFor="project_url">
-              <Input
+              <UrlOrStatusInput
                 id="project_url"
                 name="project_url"
                 placeholder="https://..., In Progress ou Private"
+                defaultValue={project?.project_url}
               />
             </Field>
             <Field label="Lien GitHub" htmlFor="github_url">
-              <Input
+              <UrlOrStatusInput
                 id="github_url"
                 name="github_url"
                 placeholder="https://github.com/... ou Private"
+                defaultValue={project?.github_url}
               />
             </Field>
           </FormGrid>
-          <RealizedProjectImagesInput onUploadingChange={setImagesUploading} />
+          <RealizedProjectImagesInput
+            onUploadingChange={setImagesUploading}
+            initialImageUrls={project?.image_urls}
+          />
           <DialogFooter>
             <SubmitButton
               pendingLabel={imagesUploading ? "Upload images..." : "Creation..."}
               disabled={imagesUploading}
             >
-              Creer le projet realise
+              {submitLabel}
             </SubmitButton>
           </DialogFooter>
         </form>

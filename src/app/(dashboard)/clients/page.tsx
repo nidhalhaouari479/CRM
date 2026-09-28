@@ -172,9 +172,11 @@ export default async function ClientsPage({
                               {client.email}
                             </p>
                           )}
-                          <p className="text-xs text-slate-500">
-                            {client.phone}
-                          </p>
+                          {client.phone && (
+                            <p className="text-xs text-slate-500">
+                              {client.phone}
+                            </p>
+                          )}
                         </TableCell>
                         <TableCell>{client.business_sector || "—"}</TableCell>
                         <TableCell className="max-w-48 truncate">

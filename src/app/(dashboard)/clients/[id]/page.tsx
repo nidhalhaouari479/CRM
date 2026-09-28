@@ -22,6 +22,7 @@ import type {
   Project,
 } from "@/lib/types";
 import { updateClientStatus } from "@/app/(dashboard)/actions";
+import { ClientFormDialog } from "@/components/forms/client-form-dialog";
 import { InteractionFormDialog } from "@/components/forms/interaction-form-dialog";
 import { ProjectFormDialog } from "@/components/forms/project-form-dialog";
 import { PageHeader } from "@/components/layout/page-header";
@@ -108,6 +109,7 @@ export default async function ClientDetailPage({
         description={`${client.client_code}${client.contact_name ? ` · ${client.contact_name}` : ""} · Ajouté par : ${client.profiles ? `${client.profiles.first_name} ${client.profiles.last_name}` : "—"}`}
         action={
           <div className="flex flex-wrap gap-2">
+            <ClientFormDialog client={client} />
             <InteractionFormDialog clientId={id} />
             <ProjectFormDialog
               clientId={id}

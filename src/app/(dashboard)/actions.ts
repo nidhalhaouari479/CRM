@@ -29,6 +29,14 @@ const urlOrVisibilityStatus = z
       z.url().safeParse(value).success,
     "Saisissez une URL valide, In Progress ou Private.",
   );
+const phoneSchema = z
+  .string()
+  .min(4)
+  .regex(/^[+\d\s().-]+$/, "Le telephone contient des caracteres non autorises.")
+  .refine(
+    (value) => value.replace(/\D/g, "").replace(/^00/, "").length >= 4,
+    "Saisissez un numero de telephone valide.",
+  );
 
 async function createNotifications(
   notifications: {
@@ -100,7 +108,7 @@ export async function createClient(
         ? nullable(formData.get("business_sector_other"))
         : null,
     email: nullable(formData.get("email")),
-    phone: text(formData.get("phone")),
+    phone: nullable(formData.get("phone")),
     website: nullable(formData.get("website")),
     facebook_url: nullable(formData.get("facebook_url")),
     instagram_url: nullable(formData.get("instagram_url")),
@@ -127,17 +135,7 @@ export async function createClient(
       business_sector: z.string().min(2).nullable(),
       business_sector_other: z.string().min(2).nullable(),
       email: z.email().nullable(),
-      phone: z
-        .string()
-        .min(4)
-        .regex(
-          /^[+\d\s().-]+$/,
-          "Le téléphone contient des caractères non autorisés.",
-        )
-        .refine(
-          (value) => value.replace(/\D/g, "").replace(/^00/, "").length >= 4,
-          "Saisissez un numéro de téléphone valide.",
-        ),
+      phone: phoneSchema.nullable(),
       website: z.url().nullable(),
       facebook_url: z.url().nullable(),
       instagram_url: z.url().nullable(),
@@ -157,6 +155,13 @@ export async function createClient(
       priority: z.enum(["Low", "Medium", "High"]),
     })
     .superRefine((client, context) => {
+      if (!client.email && !client.phone) {
+        context.addIssue({
+          code: "custom",
+          path: ["phone"],
+          message: "Ajoutez un courriel ou un numero de telephone.",
+        });
+      }
       if (client.business_sector === "Autre" && !client.business_sector_other) {
         context.addIssue({
           code: "custom",
@@ -204,6 +209,129 @@ export async function createClient(
   }
   revalidatePath("/clients");
   redirect(`/clients/${data.id}`);
+}
+
+export async function updateClient(
+  _previousState: { error: string },
+  formData: FormData,
+): Promise<{ error: string }> {
+  await requireProfile();
+  const id = text(formData.get("id"));
+  const businessSector = nullable(formData.get("business_sector"));
+  const serviceType = text(formData.get("service_type"));
+  const values = {
+    id,
+    contact_name: nullable(formData.get("contact_name")),
+    contact_position: nullable(formData.get("contact_position")),
+    company_name: text(formData.get("company_name")),
+    business_sector: businessSector,
+    business_sector_other:
+      businessSector === "Autre"
+        ? nullable(formData.get("business_sector_other"))
+        : null,
+    email: nullable(formData.get("email")),
+    phone: nullable(formData.get("phone")),
+    website: nullable(formData.get("website")),
+    facebook_url: nullable(formData.get("facebook_url")),
+    instagram_url: nullable(formData.get("instagram_url")),
+    address: nullable(formData.get("address")),
+    city: nullable(formData.get("city")),
+    country: text(formData.get("country")) || "Tunisie",
+    client_type: text(formData.get("client_type")) || "Company",
+    service_type: serviceType,
+    service_type_other:
+      serviceType === "Other"
+        ? nullable(formData.get("service_type_other"))
+        : null,
+    estimated_budget: numberOrNull(formData.get("estimated_budget")),
+    sales_status: text(formData.get("sales_status")) || "New",
+    priority: text(formData.get("priority")) || "Medium",
+    notes: nullable(formData.get("notes")),
+  };
+  const validation = z
+    .object({
+      id: z.uuid(),
+      contact_name: z.string().min(2).nullable(),
+      contact_position: z.string().min(2).nullable(),
+      company_name: z.string().min(2),
+      business_sector: z.string().min(2).nullable(),
+      business_sector_other: z.string().min(2).nullable(),
+      email: z.email().nullable(),
+      phone: phoneSchema.nullable(),
+      website: z.url().nullable(),
+      facebook_url: z.url().nullable(),
+      instagram_url: z.url().nullable(),
+      client_type: z.enum(["Individual", "Company"]),
+      service_type: z.string().min(1),
+      service_type_other: z.string().min(2).nullable(),
+      estimated_budget: z.number().min(0).nullable(),
+      sales_status: z.enum([
+        "New",
+        "Contacted",
+        "In Discussion",
+        "Waiting",
+        "Confirmed",
+        "Lost",
+        "Converted",
+      ]),
+      priority: z.enum(["Low", "Medium", "High"]),
+    })
+    .superRefine((client, context) => {
+      if (!client.email && !client.phone) {
+        context.addIssue({
+          code: "custom",
+          path: ["phone"],
+          message: "Ajoutez un courriel ou un numero de telephone.",
+        });
+      }
+      if (client.business_sector === "Autre" && !client.business_sector_other) {
+        context.addIssue({
+          code: "custom",
+          path: ["business_sector_other"],
+          message: "Precisez le secteur d'activite",
+        });
+      }
+      if (client.service_type === "Other" && !client.service_type_other) {
+        context.addIssue({
+          code: "custom",
+          path: ["service_type_other"],
+          message: "Precisez le service demande",
+        });
+      }
+    })
+    .safeParse(values);
+  if (!validation.success) {
+    return {
+      error:
+        validation.error.issues[0]?.message ??
+        "Verifiez les informations du client.",
+    };
+  }
+  const { id: clientId, ...updates } = validation.data;
+  const supabase = await createServerClient();
+  const { error } = await supabase
+    .from("clients")
+    .update(updates)
+    .eq("id", clientId);
+  if (error) {
+    if (error.code === "23505") {
+      if (error.message.includes("clients_phone_unique")) {
+        return { error: "Un client possede deja ce numero de telephone." };
+      }
+      if (error.message.includes("clients_email_unique")) {
+        return { error: "Un client possede deja cette adresse de courriel." };
+      }
+      return { error: "Un client possede deja cet identifiant." };
+    }
+    console.error("Echec de modification du client", { code: error.code });
+    return {
+      error:
+        "Impossible de modifier le client. Reessayez ou contactez votre administrateur.",
+    };
+  }
+  revalidatePath(`/clients/${clientId}`);
+  revalidatePath("/clients");
+  return { error: "" };
 }
 
 export async function updateClientStatus(formData: FormData) {
@@ -473,6 +601,80 @@ export async function createRealizedProject(formData: FormData) {
   const { error } = await supabase
     .from("realized_projects")
     .insert(validation.data);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/realized-projects");
+}
+
+export async function updateRealizedProject(formData: FormData) {
+  await requireAdmin();
+  const id = text(formData.get("id"));
+  const nameFr = text(formData.get("name_fr"));
+  const descriptionFr = text(formData.get("description_fr"));
+  const values = {
+    id,
+    name: nameFr,
+    name_fr: nameFr,
+    name_en: text(formData.get("name_en")),
+    name_it: text(formData.get("name_it")),
+    categories: textList(formData.getAll("categories")),
+    stacks: textList(formData.getAll("stacks")),
+    description: descriptionFr,
+    description_fr: descriptionFr,
+    description_en: text(formData.get("description_en")),
+    description_it: text(formData.get("description_it")),
+    project_year: Number(formData.get("project_year")),
+    client_name: text(formData.get("client_name")),
+    project_url: nullable(formData.get("project_url")),
+    github_url: nullable(formData.get("github_url")),
+    image_urls: textList(formData.getAll("image_urls")),
+  };
+  const validation = z
+    .object({
+      id: z.uuid(),
+      name: z.string().min(2, "Le nom du projet est obligatoire."),
+      name_fr: z.string().min(2, "Le nom du projet FR est obligatoire."),
+      name_en: z.string().min(2, "Le nom du projet EN est obligatoire."),
+      name_it: z.string().min(2, "Le nom du projet IT est obligatoire."),
+      categories: z
+        .array(z.enum(REALIZED_PROJECT_CATEGORIES))
+        .min(1, "Choisissez au moins une categorie.")
+        .max(20),
+      stacks: z
+        .array(z.string().min(1))
+        .min(1, "Ajoutez au moins une stack."),
+      description: z.string().min(5, "La description est trop courte."),
+      description_fr: z
+        .string()
+        .min(5, "La description FR est trop courte."),
+      description_en: z
+        .string()
+        .min(5, "La description EN est trop courte."),
+      description_it: z
+        .string()
+        .min(5, "La description IT est trop courte."),
+      project_year: z
+        .number()
+        .int()
+        .min(1990)
+        .max(new Date().getFullYear() + 10),
+      client_name: z.string().min(2, "Le nom du client est obligatoire."),
+      project_url: urlOrVisibilityStatus.nullable(),
+      github_url: urlOrVisibilityStatus.nullable(),
+      image_urls: z.array(urlOrVisibilityStatus).max(30),
+    })
+    .safeParse(values);
+  if (!validation.success) {
+    throw new Error(
+      validation.error.issues[0]?.message ??
+        "Verifiez les informations du projet realise.",
+    );
+  }
+  const { id: projectId, ...updates } = validation.data;
+  const supabase = await createServerClient();
+  const { error } = await supabase
+    .from("realized_projects")
+    .update(updates)
+    .eq("id", projectId);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/realized-projects");
 }

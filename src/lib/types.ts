@@ -24,7 +24,7 @@ export interface Client {
   contact_position: string | null;
   business_sector: string | null;
   business_sector_other: string | null;
-  phone: string;
+  phone: string | null;
   email: string | null;
   website: string | null;
   facebook_url: string | null;

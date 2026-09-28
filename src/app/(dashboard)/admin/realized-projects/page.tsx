@@ -98,7 +98,10 @@ export default async function RealizedProjectsPage() {
                       {project.client_name} - {project.project_year}
                     </CardDescription>
                   </div>
-                  <Badge variant="outline">{formatDate(project.created_at)}</Badge>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="outline">{formatDate(project.created_at)}</Badge>
+                    <RealizedProjectFormDialog project={project} />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
