@@ -1,10 +1,19 @@
-import { Code2, ExternalLink, ImageIcon, Lock, Timer } from "lucide-react";
+import {
+  CalendarDays,
+  Code2,
+  ExternalLink,
+  FolderKanban,
+  ImageIcon,
+  Lock,
+  Timer,
+} from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import type { RealizedProject } from "@/lib/types";
 import { RealizedProjectFormDialog } from "@/components/forms/realized-project-form-dialog";
 import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -14,7 +23,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export const metadata = { title: "Projets realises" };
+export const metadata = { title: "Projets réalisés" };
+
+const labelClass =
+  "text-xs font-medium uppercase tracking-wide text-muted-foreground";
 
 function isUrl(value: string | null | undefined) {
   if (!value) return false;
@@ -31,18 +43,19 @@ function LinkValue({
   kind: "site" | "github";
 }) {
   const Icon = kind === "github" ? Code2 : ExternalLink;
-  if (!value) return <span className="text-slate-400">Non renseigne</span>;
+  if (!value)
+    return <span className="text-subtle-foreground">Non renseigné</span>;
   if (value === "Private") {
     return (
-      <span className="inline-flex items-center gap-1 text-slate-600">
-        <Lock className="size-3.5" /> Private
+      <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+        <Lock className="size-3.5" aria-hidden="true" /> Privé
       </span>
     );
   }
   if (value === "In Progress") {
     return (
-      <span className="inline-flex items-center gap-1 text-amber-700">
-        <Timer className="size-3.5" /> In Progress
+      <span className="inline-flex items-center gap-1.5 text-warning">
+        <Timer className="size-3.5" aria-hidden="true" /> En cours
       </span>
     );
   }
@@ -51,9 +64,9 @@ function LinkValue({
       href={value}
       target="_blank"
       rel="noreferrer"
-      className="inline-flex items-center gap-1 font-medium text-blue-700 hover:underline"
+      className="inline-flex items-center gap-1.5 font-medium text-primary underline-offset-4 hover:underline"
     >
-      <Icon className="size-3.5" />
+      <Icon className="size-3.5" aria-hidden="true" />
       {label}
     </a>
   );
@@ -72,144 +85,167 @@ export default async function RealizedProjectsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Projets realises"
-        description="Portfolio interne des projets livres, prives ou encore en cours."
+        title="Projets réalisés"
+        description="Portfolio interne des projets livrés, privés ou encore en cours."
         action={<RealizedProjectFormDialog />}
       />
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        {projects.map((project) => {
-          const previewImage = project.image_urls.find(isUrl);
-          return (
-            <Card key={project.id}>
-              {previewImage && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={previewImage}
-                  alt={project.name_fr || project.name}
-                  className="h-48 w-full object-cover"
-                />
-              )}
-              <CardHeader>
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <CardTitle>{project.name_fr || project.name}</CardTitle>
-                    <CardDescription>
-                      {project.client_name} - {project.project_year}
-                    </CardDescription>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="outline">{formatDate(project.created_at)}</Badge>
-                    <RealizedProjectFormDialog project={project} />
+      {projects.length ? (
+        <div className="grid gap-6 xl:grid-cols-2">
+          {projects.map((project) => {
+            const title = project.name_fr || project.name;
+            const previewImage = project.image_urls.find(isUrl);
+            return (
+              <Card key={project.id} className="gap-0 pt-4 pb-0">
+                <div className="px-4">
+                  <div className="aspect-[16/9] overflow-hidden rounded-lg bg-muted ring-1 ring-border">
+                    {previewImage ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={previewImage}
+                        alt={`Aperçu du projet ${title}`}
+                        loading="lazy"
+                        className="size-full object-cover"
+                      />
+                    ) : (
+                      <div className="grid size-full place-items-center text-subtle-foreground">
+                        <ImageIcon className="size-8" aria-hidden="true" />
+                        <span className="sr-only">Aucune image</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3 text-sm leading-6 text-slate-600">
-                  <p>{project.description_fr || project.description}</p>
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div className="rounded-md border p-3">
-                      <p className="text-xs font-medium uppercase text-slate-400">
-                        English
-                      </p>
-                      <p className="mt-1 font-medium text-slate-800">
-                        {project.name_en}
-                      </p>
-                      <p className="mt-1">{project.description_en}</p>
+                <CardHeader className="pt-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <CardTitle className="text-lg">{title}</CardTitle>
+                      <CardDescription className="mt-1">
+                        {project.client_name}
+                        <span aria-hidden="true"> · </span>
+                        <span className="tabular">{project.project_year}</span>
+                      </CardDescription>
                     </div>
-                    <div className="rounded-md border p-3">
-                      <p className="text-xs font-medium uppercase text-slate-400">
-                        Italiano
-                      </p>
-                      <p className="mt-1 font-medium text-slate-800">
-                        {project.name_it}
-                      </p>
-                      <p className="mt-1">{project.description_it}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className="tabular gap-1 text-muted-foreground"
+                      >
+                        <CalendarDays aria-hidden="true" />
+                        {formatDate(project.created_at)}
+                      </Badge>
+                      <RealizedProjectFormDialog project={project} />
                     </div>
                   </div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {project.stacks.map((stack) => (
-                    <Badge key={stack} variant="secondary">
-                      {stack}
-                    </Badge>
-                  ))}
-                </div>
-                {!!project.categories.length && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-medium uppercase text-slate-400">
-                      Categories
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {project.categories.map((category) => (
-                        <Badge key={category} variant="outline">
-                          {category}
+                </CardHeader>
+                <CardContent className="flex-1 space-y-5 pt-3 pb-5">
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {project.description_fr || project.description}
+                  </p>
+                  {!!project.stacks.length && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {project.stacks.map((stack) => (
+                        <Badge key={stack} variant="secondary">
+                          {stack}
                         </Badge>
                       ))}
                     </div>
-                  </div>
-                )}
-                <div className="grid gap-3 text-sm sm:grid-cols-2">
-                  <div>
-                    <p className="text-xs font-medium uppercase text-slate-400">
-                      Site
-                    </p>
-                    <LinkValue
-                      value={project.project_url}
-                      label="Ouvrir le site"
-                      kind="site"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium uppercase text-slate-400">
-                      GitHub
-                    </p>
-                    <LinkValue
-                      value={project.github_url}
-                      label="Ouvrir GitHub"
-                      kind="github"
-                    />
-                  </div>
-                </div>
-                {!!project.image_urls.length && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-medium uppercase text-slate-400">
-                      Images
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {project.image_urls.map((image, index) =>
-                        isUrl(image) ? (
-                          <a
-                            key={`${image}-${index}`}
-                            href={image}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
-                          >
-                            <ImageIcon className="size-3.5" />
-                            Image {index + 1}
-                          </a>
-                        ) : (
-                          <Badge key={`${image}-${index}`} variant="outline">
-                            {image}
-                          </Badge>
-                        ),
-                      )}
+                  )}
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="rounded-lg border bg-muted/40 p-3">
+                      <p className={labelClass}>English</p>
+                      <p className="mt-1 text-sm font-medium text-foreground">
+                        {project.name_en}
+                      </p>
+                      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                        {project.description_en}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border bg-muted/40 p-3">
+                      <p className={labelClass}>Italiano</p>
+                      <p className="mt-1 text-sm font-medium text-foreground">
+                        {project.name_it}
+                      </p>
+                      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                        {project.description_it}
+                      </p>
                     </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {!projects.length && (
-        <Card>
-          <CardContent className="py-12 text-center text-sm text-slate-500">
-            Aucun projet realise pour le moment.
-          </CardContent>
-        </Card>
+                  {!!project.categories.length && (
+                    <div className="space-y-2">
+                      <p className={labelClass}>Catégories</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {project.categories.map((category) => (
+                          <Badge key={category} variant="outline">
+                            {category}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <dl className="grid gap-3 text-sm sm:grid-cols-2">
+                    <div>
+                      <dt className={labelClass}>Site</dt>
+                      <dd className="mt-1">
+                        <LinkValue
+                          value={project.project_url}
+                          label="Ouvrir le site"
+                          kind="site"
+                        />
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className={labelClass}>GitHub</dt>
+                      <dd className="mt-1">
+                        <LinkValue
+                          value={project.github_url}
+                          label="Ouvrir GitHub"
+                          kind="github"
+                        />
+                      </dd>
+                    </div>
+                  </dl>
+                  {!!project.image_urls.length && (
+                    <div className="space-y-2">
+                      <p className={labelClass}>Images</p>
+                      <div className="flex flex-wrap gap-2">
+                        {project.image_urls.map((image, index) =>
+                          isUrl(image) ? (
+                            <a
+                              key={`${image}-${index}`}
+                              href={image}
+                              target="_blank"
+                              rel="noreferrer"
+                              aria-label={`Ouvrir l’image ${index + 1} du projet ${title}`}
+                              className="block size-16 overflow-hidden rounded-lg bg-muted ring-1 ring-border transition-shadow hover:ring-2 hover:ring-primary"
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={image}
+                                alt={`Image ${index + 1} du projet ${title}`}
+                                loading="lazy"
+                                className="size-full object-cover"
+                              />
+                            </a>
+                          ) : (
+                            <Badge key={`${image}-${index}`} variant="outline">
+                              {image}
+                            </Badge>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        <EmptyState
+          icon={FolderKanban}
+          title="Aucun projet réalisé"
+          description="Ajoutez un premier projet au portfolio interne."
+        />
       )}
     </div>
   );

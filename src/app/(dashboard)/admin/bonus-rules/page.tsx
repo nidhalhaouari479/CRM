@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/format";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatusBadge } from "@/components/status-badge";
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -46,39 +47,56 @@ export default async function BonusRulesPage() {
         title="Règles de bonus"
         description="Le palier le plus élevé atteint est appliqué et figé."
       />
-      <div className="grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
-        <Card>
-          <CardHeader>
+      <div className="grid items-start gap-6 xl:grid-cols-[1.4fr_.6fr]">
+        <Card className="gap-0 py-0">
+          <CardHeader className="border-b pt-4">
             <CardTitle>Bonus configurés</CardTitle>
             <CardDescription>
               Rémunérations fixes liées à la valeur finale du projet.
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-0">
+          {rules.length ? (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nom</TableHead>
-                  <TableHead>Valeur minimale</TableHead>
-                  <TableHead>Bonus</TableHead>
+                  <TableHead>Palier</TableHead>
+                  <TableHead className="text-right">Valeur minimale</TableHead>
+                  <TableHead className="text-right">Bonus</TableHead>
                   <TableHead>Statut</TableHead>
-                  <TableHead></TableHead>
+                  <TableHead className="w-12">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {rules.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-medium">{r.name}</TableCell>
-                    <TableCell>{formatCurrency(r.min_project_value)}</TableCell>
-                    <TableCell className="font-semibold text-emerald-700">
-                      {formatCurrency(r.bonus_amount)}
+                  <TableRow
+                    key={r.id}
+                    className={
+                      r.is_active ? undefined : "text-muted-foreground"
+                    }
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-violet-muted text-violet">
+                          <Gift className="size-4" aria-hidden="true" />
+                        </span>
+                        <span className="font-semibold">{r.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="tabular text-right">
+                      <span className="text-subtle-foreground">≥ </span>
+                      {formatCurrency(r.min_project_value)}
+                    </TableCell>
+                    <TableCell className="tabular text-right font-semibold text-success">
+                      +{formatCurrency(r.bonus_amount)}
                     </TableCell>
                     <TableCell>
                       <StatusBadge
                         value={r.is_active ? "Active" : "Inactive"}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       <form action={toggleRule}>
                         <input type="hidden" name="table" value="bonus_rules" />
                         <input type="hidden" name="id" value={r.id} />
@@ -87,8 +105,17 @@ export default async function BonusRulesPage() {
                           name="is_active"
                           value={String(r.is_active)}
                         />
-                        <Button size="icon" variant="ghost">
-                          <Power className="size-4" />
+                        <Button
+                          size="icon-sm"
+                          variant="ghost"
+                          aria-label={
+                            r.is_active
+                              ? `Désactiver la règle ${r.name}`
+                              : `Activer la règle ${r.name}`
+                          }
+                          title={r.is_active ? "Désactiver" : "Activer"}
+                        >
+                          <Power aria-hidden="true" />
                         </Button>
                       </form>
                     </TableCell>
@@ -96,16 +123,26 @@ export default async function BonusRulesPage() {
                 ))}
               </TableBody>
             </Table>
-          </CardContent>
+          ) : (
+            <div className="p-5">
+              <EmptyState
+                icon={Gift}
+                title="Aucun bonus configuré"
+                description="Ajoutez un premier palier avec le formulaire."
+              />
+            </div>
+          )}
         </Card>
-        <Card>
-          <CardHeader>
+        <Card className="gap-0 py-0">
+          <CardHeader className="border-b pt-4">
             <CardTitle className="flex items-center gap-2">
-              <Gift className="size-5 text-violet-600" />
+              <span className="grid size-8 place-items-center rounded-lg bg-violet-muted text-violet">
+                <Gift className="size-4" aria-hidden="true" />
+              </span>
               Nouveau bonus
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="py-5">
             <form action={createBonusRule} className="space-y-5">
               <Field label="Nom de la règle" htmlFor="name" required>
                 <Input id="name" name="name" required />

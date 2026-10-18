@@ -1,20 +1,37 @@
-import { Building2, CheckCircle2, ShieldCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  BarChart3,
+  Building2,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 import { redirect } from "next/navigation";
 import { signIn } from "@/app/(auth)/actions";
 import { getCurrentProfile } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { LoginSubmitButton } from "@/components/forms/login-submit-button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const metadata = { title: "Connexion" };
+
+const highlights = [
+  {
+    icon: Users,
+    title: "Suivi commercial complet",
+    text: "Clients, projets, tâches et interactions au même endroit.",
+  },
+  {
+    icon: BarChart3,
+    title: "Revenus transparents",
+    text: "Paiements, commissions et bonus calculés automatiquement.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Accès sécurisé",
+    text: "Chaque collaborateur ne voit que ce qui le concerne.",
+  },
+];
 
 export default async function LoginPage({
   searchParams,
@@ -27,90 +44,130 @@ export default async function LoginPage({
   const configured = isSupabaseConfigured();
 
   return (
-    <main className="grid min-h-screen bg-slate-950 lg:grid-cols-[1.1fr_.9fr]">
-      <section className="relative hidden overflow-hidden p-12 text-white lg:flex lg:flex-col lg:justify-between">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,.35),transparent_35%),radial-gradient(circle_at_80%_70%,rgba(99,102,241,.25),transparent_35%)]" />
-        <div className="relative flex items-center gap-3 text-lg font-semibold">
-          <span className="grid size-10 place-items-center rounded-xl bg-blue-500">
-            <Building2 className="size-5" />
+    <main className="grid min-h-dvh bg-background lg:grid-cols-[1fr_1fr] xl:grid-cols-[1.1fr_.9fr]">
+      <section className="relative hidden overflow-hidden bg-sidebar p-12 text-white lg:flex lg:flex-col lg:justify-between xl:p-16">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[linear-gradient(to_right,rgb(255_255_255/0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgb(255_255_255/0.04)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_at_top_left,black_30%,transparent_75%)]"
+        />
+        <div className="relative flex items-center gap-3">
+          <span className="grid size-10 place-items-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+            <Building2 className="size-5" aria-hidden="true" />
           </span>
-          Gestion clients Tunisie
+          <span>
+            <span className="block font-semibold leading-tight">
+              Gestion clients
+            </span>
+            <span className="block text-xs text-sidebar-muted">
+              Tunisie · CRM
+            </span>
+          </span>
         </div>
+
         <div className="relative max-w-xl">
-          <p className="mb-4 text-sm font-medium uppercase tracking-[.22em] text-blue-300">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[.2em] text-sidebar-primary">
             Espace de travail interne
           </p>
-          <h1 className="text-5xl font-semibold leading-tight tracking-tight">
+          <h1 className="text-4xl font-bold leading-[1.15] tracking-tight xl:text-5xl">
             Pilotez vos clients, projets et revenus au même endroit.
           </h1>
-          <div className="mt-8 grid gap-4 text-slate-300 sm:grid-cols-2">
-            <p className="flex gap-2">
-              <CheckCircle2 className="mt-0.5 size-5 text-emerald-400" /> Suivi
-              commercial complet
-            </p>
-            <p className="flex gap-2">
-              <ShieldCheck className="mt-0.5 size-5 text-emerald-400" /> Données
-              protégées par des droits d’accès
-            </p>
-          </div>
+          <ul className="mt-10 space-y-5">
+            {highlights.map(({ icon: Icon, title, text }) => (
+              <li key={title} className="flex gap-4">
+                <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-white/[.06] ring-1 ring-white/10">
+                  <Icon
+                    className="size-5 text-sidebar-primary"
+                    aria-hidden="true"
+                  />
+                </span>
+                <span>
+                  <span className="block font-semibold">{title}</span>
+                  <span className="mt-0.5 block text-sm text-sidebar-foreground">
+                    {text}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
-        <p className="relative text-sm text-slate-400">
+
+        <p className="relative text-sm text-sidebar-muted">
           Accès réservé aux collaborateurs autorisés.
         </p>
       </section>
 
-      <section className="flex items-center justify-center bg-slate-50 p-6 sm:p-10">
-        <Card className="w-full max-w-md border-slate-200 shadow-xl shadow-slate-950/5">
-          <CardHeader className="space-y-2 pb-6">
-            <div className="mb-4 grid size-11 place-items-center rounded-xl bg-blue-600 text-white lg:hidden">
-              <Building2 className="size-5" />
-            </div>
-            <CardTitle className="text-2xl">Bon retour</CardTitle>
-            <CardDescription>
-              Connectez-vous à votre espace de gestion sécurisé.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!configured && (
-              <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+      <section className="flex items-center justify-center px-4 py-10 sm:px-10">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 flex items-center gap-3 lg:hidden">
+            <span className="grid size-10 place-items-center rounded-lg bg-sidebar text-sidebar-primary">
+              <Building2 className="size-5" aria-hidden="true" />
+            </span>
+            <span className="font-semibold">Gestion clients Tunisie</span>
+          </div>
+
+          <h2 className="text-2xl font-bold tracking-tight">Bon retour</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Connectez-vous à votre espace de gestion sécurisé.
+          </p>
+
+          {!configured && (
+            <div
+              role="status"
+              className="mt-6 flex gap-3 rounded-lg border border-warning/30 bg-warning-muted p-3 text-sm text-warning"
+            >
+              <AlertTriangle
+                className="mt-0.5 size-4 shrink-0"
+                aria-hidden="true"
+              />
+              <p>
                 Supabase n’est pas configuré. Copiez <code>.env.example</code>{" "}
                 vers <code>.env.local</code> puis ajoutez vos clés.
-              </div>
-            )}
-            {error && (
-              <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                {error}
-              </div>
-            )}
-            <form action={signIn} className="space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="email">Adresse courriel</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="vous@entreprise.tn"
-                  required
-                  disabled={!configured}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  minLength={6}
-                  required
-                  disabled={!configured}
-                />
-              </div>
-              <LoginSubmitButton disabled={!configured} />
-            </form>
-          </CardContent>
-        </Card>
+              </p>
+            </div>
+          )}
+          {error && (
+            <div
+              role="alert"
+              className="mt-6 flex gap-3 rounded-lg border border-destructive/30 bg-destructive-muted p-3 text-sm text-destructive"
+            >
+              <AlertTriangle
+                className="mt-0.5 size-4 shrink-0"
+                aria-hidden="true"
+              />
+              <p>{error}</p>
+            </div>
+          )}
+
+          <form action={signIn} className="mt-8 space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="email">Adresse courriel</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                placeholder="vous@entreprise.tn"
+                className="h-11"
+                required
+                disabled={!configured}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Mot de passe</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                minLength={6}
+                className="h-11"
+                required
+                disabled={!configured}
+              />
+            </div>
+            <LoginSubmitButton disabled={!configured} />
+          </form>
+        </div>
       </section>
     </main>
   );

@@ -4,10 +4,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Design system — "Accessible & Ethical" B2B CRM (UI/UX Pro Max).
+ * Navy/slate surfaces, a single sky-blue action colour, AA contrast on every
+ * text pair, and semantic success / warning / info tokens for statuses.
+ */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Segoe UI", Arial, sans-serif;
+  --font-sans: var(--font-jakarta), "Segoe UI", system-ui, sans-serif;
   --font-mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -17,6 +22,7 @@
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
   --color-sidebar: var(--sidebar);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
@@ -27,9 +33,19 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-muted: var(--destructive-muted);
+  --color-success: var(--success);
+  --color-success-muted: var(--success-muted);
+  --color-warning: var(--warning);
+  --color-warning-muted: var(--warning-muted);
+  --color-info: var(--info);
+  --color-info-muted: var(--info-muted);
+  --color-violet: var(--violet);
+  --color-violet-muted: var(--violet-muted);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
@@ -46,91 +62,159 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --shadow-card:
+    0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06);
+  --shadow-raised:
+    0 4px 6px -1px rgb(15 23 42 / 0.06), 0 10px 24px -6px rgb(15 23 42 / 0.1);
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.56 0.23 260);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.65 0.18 260);
-  --chart-1: oklch(0.62 0.22 260);
-  --chart-2: oklch(0.7 0.17 162);
-  --chart-3: oklch(0.75 0.17 75);
-  --chart-4: oklch(0.65 0.2 305);
-  --chart-5: oklch(0.65 0.22 20);
+  color-scheme: light;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #0369a1;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #475569;
+  --subtle-foreground: #64748b;
+  --accent: #f0f9ff;
+  --accent-foreground: #075985;
+  --destructive: #dc2626;
+  --destructive-muted: #fef2f2;
+  --success: #047857;
+  --success-muted: #ecfdf5;
+  --warning: #b45309;
+  --warning-muted: #fffbeb;
+  --info: #0369a1;
+  --info-muted: #f0f9ff;
+  --violet: #6d28d9;
+  --violet-muted: #f5f3ff;
+  --border: #e2e8f0;
+  --input: #cbd5e1;
+  --ring: #0369a1;
+  --chart-1: #0369a1;
+  --chart-2: #059669;
+  --chart-3: #d97706;
+  --chart-4: #7c3aed;
+  --chart-5: #e11d48;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #0f172a;
+  --sidebar-foreground: #cbd5e1;
+  --sidebar-muted: #94a3b8;
+  --sidebar-primary: #38bdf8;
+  --sidebar-primary-foreground: #082f49;
+  --sidebar-accent: rgb(255 255 255 / 0.07);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 0.08);
+  --sidebar-ring: #38bdf8;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  color-scheme: dark;
+  --background: #020617;
+  --foreground: #f1f5f9;
+  --card: #0f172a;
+  --card-foreground: #f1f5f9;
+  --popover: #0f172a;
+  --popover-foreground: #f1f5f9;
+  --primary: #38bdf8;
+  --primary-foreground: #082f49;
+  --secondary: #1e293b;
+  --secondary-foreground: #f1f5f9;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --subtle-foreground: #94a3b8;
+  --accent: rgb(56 189 248 / 0.12);
+  --accent-foreground: #bae6fd;
+  --destructive: #f87171;
+  --destructive-muted: rgb(248 113 113 / 0.12);
+  --success: #34d399;
+  --success-muted: rgb(52 211 153 / 0.12);
+  --warning: #fbbf24;
+  --warning-muted: rgb(251 191 36 / 0.12);
+  --info: #38bdf8;
+  --info-muted: rgb(56 189 248 / 0.12);
+  --violet: #a78bfa;
+  --violet-muted: rgb(167 139 250 / 0.12);
+  --border: rgb(255 255 255 / 0.1);
+  --input: rgb(255 255 255 / 0.16);
+  --ring: #38bdf8;
+  --chart-1: #0284c7;
+  --chart-2: #34d399;
+  --chart-3: #fbbf24;
+  --chart-4: #a78bfa;
+  --chart-5: #fb7185;
+  --sidebar: #020617;
+  --sidebar-foreground: #cbd5e1;
+  --sidebar-muted: #94a3b8;
+  --sidebar-primary: #38bdf8;
+  --sidebar-primary-foreground: #082f49;
+  --sidebar-accent: rgb(255 255 255 / 0.06);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 0.08);
+  --sidebar-ring: #38bdf8;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground selection:bg-blue-100 selection:text-blue-950;
-  }
   html {
     @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground selection:bg-primary/15 selection:text-foreground;
+    font-feature-settings: "cv11", "ss01";
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href],
+  select,
+  summary,
+  label[for] {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  /* Components that draw their own ring keep it. */
+  [data-slot]:focus-visible {
+    outline: none;
+  }
+  table {
+    font-variant-numeric: tabular-nums;
   }
 }
 
 @layer utilities {
   .page-grid {
-    @apply grid gap-4 md:gap-5;
+    @apply grid gap-4 md:gap-6;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

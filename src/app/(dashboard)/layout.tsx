@@ -20,13 +20,25 @@ export default async function DashboardLayout({
     .limit(8);
   const notifications = (notificationsData ?? []) as Notification[];
   return (
-    <div className="min-h-screen bg-slate-50">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r lg:block">
+    <div className="min-h-dvh bg-background">
+      <a
+        href="#main-content"
+        className="sr-only z-50 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+      >
+        Aller au contenu principal
+      </a>
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 lg:block">
         <AppSidebar role={profile.role} />
       </aside>
       <div className="lg:pl-64">
         <AppHeader profile={profile} notifications={notifications} />
-        <main className="p-4 md:p-6 lg:p-8">{children}</main>
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-[1440px] px-4 py-6 outline-none md:px-6 lg:px-8 lg:py-8"
+        >
+          {children}
+        </main>
       </div>
     </div>
   );

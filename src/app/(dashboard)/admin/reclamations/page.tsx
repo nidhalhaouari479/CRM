@@ -1,4 +1,4 @@
-import { MessageSquareWarning } from "lucide-react";
+import { CircleCheck, Inbox, MessageSquareWarning } from "lucide-react";
 import { updateComplaintStatus } from "@/app/(dashboard)/actions";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -7,8 +7,10 @@ import type { Complaint } from "@/lib/types";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
+import { EmptyState } from "@/components/empty-state";
+import { EntityAvatar } from "@/components/entity-avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { NativeSelect } from "@/components/forms/form-fields";
 import {
   Table,
@@ -19,14 +21,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export const metadata = { title: "Reclamations admin" };
+export const metadata = { title: "Réclamations admin" };
 
 export default async function AdminReclamationsPage() {
   await requireAdmin();
   const supabase = await createClient();
   const { data } = await supabase
     .from("complaints")
-    .select("*, profiles!complaints_employee_id_fkey(first_name, last_name, email)")
+    .select(
+      "*, profiles!complaints_employee_id_fkey(first_name, last_name, email)",
+    )
     .order("created_at", { ascending: false });
   const complaints = (data ?? []) as unknown as Complaint[];
   const openCount = complaints.filter((item) => item.status === "Open").length;
@@ -34,15 +38,11 @@ export default async function AdminReclamationsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Reclamations"
-        description="Demandes internes envoyees par les employes."
+        title="Réclamations"
+        description="Demandes internes envoyées par les employés."
       />
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard
-          label="Total"
-          value={complaints.length}
-          icon={MessageSquareWarning}
-        />
+        <StatCard label="Total" value={complaints.length} icon={Inbox} />
         <StatCard
           label="Ouvertes"
           value={openCount}
@@ -50,76 +50,90 @@ export default async function AdminReclamationsPage() {
           tone="amber"
         />
         <StatCard
-          label="Traitees"
+          label="Traitées"
           value={complaints.length - openCount}
-          icon={MessageSquareWarning}
+          icon={CircleCheck}
           tone="green"
         />
       </div>
-      <Card className="overflow-hidden">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Employe</TableHead>
-                  <TableHead>Objet</TableHead>
-                  <TableHead>Details</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {complaints.map((complaint) => (
+      <Card className="gap-0 py-0">
+        {complaints.length ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Employé</TableHead>
+                <TableHead>Réclamation</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {complaints.map((complaint) => {
+                const name = `${complaint.profiles?.first_name ?? ""} ${complaint.profiles?.last_name ?? ""}`;
+                return (
                   <TableRow key={complaint.id}>
                     <TableCell>
-                      <p className="font-medium">
-                        {complaint.profiles?.first_name}{" "}
-                        {complaint.profiles?.last_name}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {complaint.profiles?.email}
-                      </p>
+                      <div className="flex items-center gap-3">
+                        <EntityAvatar name={name} />
+                        <div className="min-w-0">
+                          <p className="font-semibold">
+                            {complaint.profiles?.first_name}{" "}
+                            {complaint.profiles?.last_name}
+                          </p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {complaint.profiles?.email}
+                          </p>
+                        </div>
+                      </div>
                     </TableCell>
-                    <TableCell className="font-medium">
-                      {complaint.subject}
-                    </TableCell>
-                    <TableCell className="max-w-sm whitespace-pre-line text-sm text-slate-600">
-                      {complaint.details}
+                    <TableCell className="min-w-64 max-w-md whitespace-normal">
+                      <p className="font-semibold">{complaint.subject}</p>
+                      <p className="mt-1 line-clamp-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+                        {complaint.details}
+                      </p>
                     </TableCell>
                     <TableCell>
                       <StatusBadge value={complaint.status} />
                     </TableCell>
-                    <TableCell>{formatDate(complaint.created_at, true)}</TableCell>
+                    <TableCell className="tabular text-muted-foreground">
+                      {formatDate(complaint.created_at, true)}
+                    </TableCell>
                     <TableCell>
-                      <form action={updateComplaintStatus} className="flex gap-2">
+                      <form
+                        action={updateComplaintStatus}
+                        className="flex items-center gap-2"
+                      >
                         <input type="hidden" name="id" value={complaint.id} />
                         <NativeSelect
                           name="status"
+                          aria-label={`Statut de la réclamation « ${complaint.subject} »`}
                           defaultValue={complaint.status}
-                          className="w-32"
+                          className="h-8 w-32"
                         >
                           <option value="Open">Ouverte</option>
                           <option value="Reviewed">Vue</option>
-                          <option value="Closed">Fermee</option>
+                          <option value="Closed">Fermée</option>
                         </NativeSelect>
                         <Button type="submit" size="sm" variant="outline">
-                          OK
+                          Mettre à jour
                         </Button>
                       </form>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                );
+              })}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="p-5">
+            <EmptyState
+              icon={Inbox}
+              title="Aucune réclamation reçue"
+              description="Les demandes envoyées par les employés apparaîtront ici."
+            />
           </div>
-          {!complaints.length && (
-            <p className="p-10 text-center text-sm text-slate-500">
-              Aucune reclamation recue.
-            </p>
-          )}
-        </CardContent>
+        )}
       </Card>
     </div>
   );

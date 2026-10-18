@@ -17,6 +17,7 @@ import type { Client, Interaction, Profile, Project, Task } from "@/lib/types";
 import { ClientFormDialog } from "@/components/forms/client-form-dialog";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatCard } from "@/components/stat-card";
+import { EntityAvatar } from "@/components/entity-avatar";
 import { StatusBadge } from "@/components/status-badge";
 import { RevenueChart, PipelineChart } from "@/components/dashboard-charts";
 import {
@@ -207,19 +208,19 @@ export default async function DashboardPage() {
           tone="amber"
         />
         <StatCard
-          label="Taches ouvertes"
+          label="Tâches ouvertes"
           value={openTasks.length}
           icon={ListChecks}
           tone="blue"
         />
         <StatCard
-          label="Taches en retard"
+          label="Tâches en retard"
           value={overdueTasks.length}
           icon={CalendarClock}
           tone={overdueTasks.length ? "red" : "green"}
         />
       </div>
-      <div className="grid gap-5 xl:grid-cols-[1.5fr_1fr]">
+      <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
         <Card>
           <CardHeader>
             <CardTitle>Évolution des revenus</CardTitle>
@@ -241,9 +242,9 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-      <div className="grid gap-5 xl:grid-cols-[1.45fr_.75fr]">
+      <div className="grid gap-6 xl:grid-cols-[1.45fr_.75fr]">
         <Card>
-          <CardHeader className="flex-row items-center justify-between">
+          <CardHeader className="border-b">
             <div>
               <CardTitle>
                 {profile.role === "admin"
@@ -251,37 +252,46 @@ export default async function DashboardPage() {
                   : "Mes projets récents"}
               </CardTitle>
               <CardDescription>
-                Données factuelles calculées depuis Supabase
+                {profile.role === "admin"
+                  ? "Clients, projets et gains par collaborateur"
+                  : "Vos six derniers projets"}
               </CardDescription>
             </div>
           </CardHeader>
-          <CardContent className="overflow-x-auto p-0">
+          <CardContent className="-mt-4 -mb-4 p-0">
             {profile.role === "admin" ? (
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Employé</TableHead>
-                    <TableHead>Clients</TableHead>
-                    <TableHead>Projets</TableHead>
-                    <TableHead>Revenus</TableHead>
-                    <TableHead>Gains</TableHead>
+                    <TableHead className="text-right">Clients</TableHead>
+                    <TableHead className="text-right">Projets</TableHead>
+                    <TableHead className="text-right">Revenus</TableHead>
+                    <TableHead className="text-right">Gains</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {performance.map((row) => (
                     <TableRow key={row.id}>
-                      <TableCell className="font-medium">
+                      <TableCell>
                         <Link
                           href={`/admin/employees/${row.id}`}
-                          className="hover:text-blue-600"
+                          className="flex items-center gap-3 font-semibold hover:text-primary"
                         >
+                          <EntityAvatar name={row.name} className="size-8" />
                           {row.name}
                         </Link>
                       </TableCell>
-                      <TableCell>{row.clients}</TableCell>
-                      <TableCell>{row.projects}</TableCell>
-                      <TableCell>{formatCurrency(row.revenue)}</TableCell>
-                      <TableCell className="font-medium text-emerald-700">
+                      <TableCell className="tabular text-right">
+                        {row.clients}
+                      </TableCell>
+                      <TableCell className="tabular text-right">
+                        {row.projects}
+                      </TableCell>
+                      <TableCell className="tabular text-right">
+                        {formatCurrency(row.revenue)}
+                      </TableCell>
+                      <TableCell className="tabular text-right font-semibold text-success">
                         {formatCurrency(row.earnings)}
                       </TableCell>
                     </TableRow>
@@ -294,7 +304,7 @@ export default async function DashboardPage() {
                   <TableRow>
                     <TableHead>Projet</TableHead>
                     <TableHead>Client</TableHead>
-                    <TableHead>Valeur</TableHead>
+                    <TableHead className="text-right">Valeur</TableHead>
                     <TableHead>Statut</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -303,16 +313,18 @@ export default async function DashboardPage() {
                     <TableRow key={row.id}>
                       <TableCell>
                         <Link
-                          className="font-medium hover:text-blue-600"
+                          className="font-semibold hover:text-primary"
                           href={`/projects/${row.id}`}
                         >
                           {row.name}
                         </Link>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-muted-foreground">
                         {row.clients?.company_name ?? row.clients?.contact_name}
                       </TableCell>
-                      <TableCell>{formatCurrency(row.final_price)}</TableCell>
+                      <TableCell className="tabular text-right font-medium">
+                        {formatCurrency(row.final_price)}
+                      </TableCell>
                       <TableCell>
                         <StatusBadge value={row.status} />
                       </TableCell>
@@ -324,32 +336,40 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
+          <CardHeader className="border-b">
             <CardTitle>Activités récentes</CardTitle>
             <CardDescription>Derniers échanges consignés</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-5">
+          <CardContent>
             {interactions.length ? (
-              interactions.map((item) => (
-                <div key={item.id} className="flex gap-3">
-                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-blue-50 text-blue-600">
-                    <MessageSquareText className="size-4" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">
-                      {item.objective}
-                    </p>
-                    <p className="truncate text-xs text-slate-500">
-                      {item.clients?.company_name ?? item.clients?.contact_name}
-                    </p>
-                    <p className="mt-1 text-[11px] text-slate-400">
-                      {formatDate(item.date, true)}
-                    </p>
-                  </div>
-                </div>
-              ))
+              <ol className="relative space-y-5 before:absolute before:inset-y-2 before:left-[17px] before:w-px before:bg-border">
+                {interactions.map((item) => (
+                  <li key={item.id} className="relative flex gap-3">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent text-primary ring-4 ring-card">
+                      <MessageSquareText
+                        className="size-4"
+                        aria-hidden="true"
+                      />
+                    </span>
+                    <div className="min-w-0 pt-0.5">
+                      <p className="truncate text-sm font-semibold">
+                        {item.objective}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {item.clients?.company_name ??
+                          item.clients?.contact_name}
+                      </p>
+                      <p className="mt-1 text-xs text-subtle-foreground">
+                        <time dateTime={item.date}>
+                          {formatDate(item.date, true)}
+                        </time>
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
             ) : (
-              <p className="py-10 text-center text-sm text-slate-500">
+              <p className="py-10 text-center text-sm text-muted-foreground">
                 Aucune activité récente.
               </p>
             )}

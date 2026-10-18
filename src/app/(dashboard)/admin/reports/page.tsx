@@ -2,6 +2,7 @@ import {
   BadgeDollarSign,
   CircleDollarSign,
   Contact,
+  UsersRound,
   WalletCards,
 } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
@@ -11,6 +12,8 @@ import type { Client, Profile, Project } from "@/lib/types";
 import { RevenueChart } from "@/components/dashboard-charts";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatCard } from "@/components/stat-card";
+import { EmptyState } from "@/components/empty-state";
+import { EntityAvatar } from "@/components/entity-avatar";
 import {
   Card,
   CardContent,
@@ -116,54 +119,77 @@ export default async function ReportsPage() {
           tone="violet"
         />
       </div>
-      <Card>
-        <CardHeader>
+      <Card className="gap-0 py-0">
+        <CardHeader className="border-b pt-4">
           <CardTitle>Revenus sur 12 mois</CardTitle>
           <CardDescription>
             Somme des paiements réellement enregistrés
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="py-5">
           <RevenueChart data={chart} />
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader>
+      <Card className="gap-0 py-0">
+        <CardHeader className="border-b pt-4">
           <CardTitle>Performance par employé</CardTitle>
           <CardDescription>
             Aucun classement arbitraire, uniquement les données consolidées.
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0">
+        {rows.length ? (
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Employé</TableHead>
-                <TableHead>Clients</TableHead>
-                <TableHead>Projets</TableHead>
-                <TableHead>Revenus</TableHead>
-                <TableHead>Commissions</TableHead>
-                <TableHead>Bonus</TableHead>
-                <TableHead>Total gains</TableHead>
+                <TableHead className="text-right">Clients</TableHead>
+                <TableHead className="text-right">Projets</TableHead>
+                <TableHead className="text-right">Revenus</TableHead>
+                <TableHead className="text-right">Commissions</TableHead>
+                <TableHead className="text-right">Bonus</TableHead>
+                <TableHead className="text-right">Total gains</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {rows.map((r) => (
                 <TableRow key={r.name}>
-                  <TableCell className="font-medium">{r.name}</TableCell>
-                  <TableCell>{r.clients}</TableCell>
-                  <TableCell>{r.projects}</TableCell>
-                  <TableCell>{formatCurrency(r.revenue)}</TableCell>
-                  <TableCell>{formatCurrency(r.commission)}</TableCell>
-                  <TableCell>{formatCurrency(r.bonus)}</TableCell>
-                  <TableCell className="font-semibold text-emerald-700">
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <EntityAvatar name={r.name} className="size-8" />
+                      <span className="font-semibold">{r.name}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="tabular text-right">
+                    {r.clients}
+                  </TableCell>
+                  <TableCell className="tabular text-right">
+                    {r.projects}
+                  </TableCell>
+                  <TableCell className="tabular text-right font-medium">
+                    {formatCurrency(r.revenue)}
+                  </TableCell>
+                  <TableCell className="tabular text-right text-muted-foreground">
+                    {formatCurrency(r.commission)}
+                  </TableCell>
+                  <TableCell className="tabular text-right text-muted-foreground">
+                    {formatCurrency(r.bonus)}
+                  </TableCell>
+                  <TableCell className="tabular text-right font-semibold text-success">
                     {formatCurrency(r.commission + r.bonus)}
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        </CardContent>
+        ) : (
+          <div className="p-5">
+            <EmptyState
+              icon={UsersRound}
+              title="Aucun employé"
+              description="Les performances apparaîtront dès qu’un employé sera ajouté."
+            />
+          </div>
+        )}
       </Card>
     </div>
   );

@@ -26,16 +26,22 @@ const blue = ["Reviewed", "In Progress"];
 
 export function StatusBadge({ value }: { value: string }) {
   const className = green.includes(value)
-    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+    ? "border-success/25 bg-success-muted text-success before:bg-success"
     : red.includes(value)
-      ? "border-red-200 bg-red-50 text-red-700"
+      ? "border-destructive/25 bg-destructive-muted text-destructive before:bg-destructive"
       : amber.includes(value)
-        ? "border-amber-200 bg-amber-50 text-amber-700"
+        ? "border-warning/25 bg-warning-muted text-warning before:bg-warning"
         : blue.includes(value)
-          ? "border-blue-200 bg-blue-50 text-blue-700"
-          : "border-slate-200 bg-slate-50 text-slate-700";
+          ? "border-info/25 bg-info-muted text-info before:bg-info"
+          : "border-border bg-muted text-muted-foreground before:bg-subtle-foreground";
   return (
-    <Badge variant="outline" className={cn("font-medium", className)}>
+    <Badge
+      variant="outline"
+      className={cn(
+        "gap-1.5 font-medium before:size-1.5 before:shrink-0 before:rounded-full",
+        className,
+      )}
+    >
       {frenchLabel(value)}
     </Badge>
   );

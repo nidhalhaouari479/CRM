@@ -250,7 +250,7 @@ export function ClientFormDialog({ client }: { client?: Client }) {
                 ))}
               </NativeSelect>
             </Field>
-            <Field label="Priorite" htmlFor="priority">
+            <Field label="Priorité" htmlFor="priority">
               <NativeSelect
                 id="priority"
                 name="priority"
@@ -272,7 +272,7 @@ export function ClientFormDialog({ client }: { client?: Client }) {
           </Field>
           <DialogFooter>
             {state.error && (
-              <p role="alert" className="text-sm text-red-600">
+              <p role="alert" className="text-sm text-destructive">
                 {state.error}
               </p>
             )}
@@ -281,7 +281,7 @@ export function ClientFormDialog({ client }: { client?: Client }) {
                 ? "Enregistrement..."
                 : isEditing
                   ? "Modifier le client"
-                  : "Creer le client"}
+                  : "Créer le client"}
             </Button>
           </DialogFooter>
         </form>

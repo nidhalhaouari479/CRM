@@ -19,7 +19,11 @@ export function Field({
     <div className={cn("space-y-2", className)}>
       <Label htmlFor={htmlFor}>
         {label}
-        {required && <span className="ml-1 text-red-500">*</span>}
+        {required && (
+          <span className="ml-1 text-destructive" aria-hidden="true">
+            *
+          </span>
+        )}
       </Label>
       {children}
     </div>
@@ -34,7 +38,7 @@ export function NativeSelect({
   return (
     <select
       className={cn(
-        "h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
+        "h-9 w-full rounded-lg border border-input bg-card px-3 py-1 text-sm outline-none transition-colors disabled:cursor-not-allowed disabled:opacity-50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
         className,
       )}
       {...props}

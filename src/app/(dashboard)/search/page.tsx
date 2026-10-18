@@ -5,7 +5,9 @@ import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Client, Profile, Project } from "@/lib/types";
 import { PageHeader } from "@/components/layout/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/empty-state";
+import { EntityAvatar } from "@/components/entity-avatar";
 
 export default async function SearchPage({
   searchParams,
@@ -45,59 +47,50 @@ export default async function SearchPage({
         description={`${clients.length + projects.length + profiles.length} résultat(s)`}
       />
       {!term ? (
-        <Card>
-          <CardContent className="flex min-h-64 flex-col items-center justify-center text-slate-500">
-            <Search className="mb-3 size-8" />
-            Saisissez un terme dans la barre de recherche.
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Search}
+          title="Aucun terme de recherche"
+          description="Saisissez un terme dans la barre de recherche."
+        />
       ) : (
-        <div className="grid gap-5 lg:grid-cols-3">
-          <ResultCard title="Clients" icon={Contact}>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <ResultCard title="Clients" icon={Contact} count={clients.length}>
             {clients.map((c) => (
-              <Link
+              <ResultLink
                 key={c.id}
                 href={`/clients/${c.id}`}
-                className="block rounded-lg border p-3 text-sm hover:border-blue-300 hover:bg-blue-50"
-              >
-                <strong>{c.company_name}</strong>
-                <span className="mt-1 block text-xs text-slate-500">
-                  {c.client_code} ·{" "}
-                  {c.business_sector || "Secteur non renseigné"} ·{" "}
-                  {frenchLabel(c.service_type)}
-                </span>
-              </Link>
+                name={c.company_name}
+                meta={`${c.client_code} · ${c.business_sector || "Secteur non renseigné"} · ${frenchLabel(c.service_type)}`}
+              />
             ))}
           </ResultCard>
-          <ResultCard title="Projets" icon={BriefcaseBusiness}>
+          <ResultCard
+            title="Projets"
+            icon={BriefcaseBusiness}
+            count={projects.length}
+          >
             {projects.map((p) => (
-              <Link
+              <ResultLink
                 key={p.id}
                 href={`/projects/${p.id}`}
-                className="block rounded-lg border p-3 text-sm hover:border-blue-300 hover:bg-blue-50"
-              >
-                <strong>{p.name}</strong>
-                <span className="mt-1 block text-xs text-slate-500">
-                  {frenchLabel(p.service_type)} · {frenchLabel(p.status)}
-                </span>
-              </Link>
+                name={p.name}
+                meta={`${frenchLabel(p.service_type)} · ${frenchLabel(p.status)}`}
+              />
             ))}
           </ResultCard>
           {profile.role === "admin" && (
-            <ResultCard title="Employés" icon={UserRound}>
+            <ResultCard
+              title="Employés"
+              icon={UserRound}
+              count={profiles.length}
+            >
               {profiles.map((p) => (
-                <Link
+                <ResultLink
                   key={p.id}
                   href={`/admin/employees/${p.id}`}
-                  className="block rounded-lg border p-3 text-sm hover:border-blue-300 hover:bg-blue-50"
-                >
-                  <strong>
-                    {p.first_name} {p.last_name}
-                  </strong>
-                  <span className="mt-1 block text-xs text-slate-500">
-                    {p.email}
-                  </span>
-                </Link>
+                  name={`${p.first_name} ${p.last_name}`}
+                  meta={p.email}
+                />
               ))}
             </ResultCard>
           )}
@@ -109,21 +102,60 @@ export default async function SearchPage({
 function ResultCard({
   title,
   icon: Icon,
+  count,
   children,
 }: {
   title: string;
   icon: typeof Contact;
+  count: number;
   children: React.ReactNode;
 }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Icon className="size-4 text-blue-600" />
+    <Card className="gap-0 pb-0">
+      <CardHeader className="border-b">
+        <CardTitle className="flex items-center gap-2">
+          <Icon aria-hidden="true" className="size-4 text-primary" />
           {title}
+          <span className="tabular ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+            {count}
+          </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">{children}</CardContent>
+      {count ? (
+        <ul className="divide-y">{children}</ul>
+      ) : (
+        <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+          Aucun résultat.
+        </p>
+      )}
     </Card>
+  );
+}
+function ResultLink({
+  href,
+  name,
+  meta,
+}: {
+  href: string;
+  name: string;
+  meta: string;
+}) {
+  return (
+    <li>
+      <Link
+        href={href}
+        className="flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent"
+      >
+        <EntityAvatar name={name} />
+        <span className="min-w-0">
+          <span className="block truncate font-semibold text-foreground">
+            {name}
+          </span>
+          <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+            {meta}
+          </span>
+        </span>
+      </Link>
+    </li>
   );
 }

@@ -4,12 +4,14 @@ import {
   CircleDollarSign,
   Percent,
   Trophy,
+  Wallet,
 } from "lucide-react";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency, formatDate } from "@/lib/format";
 import type { Project } from "@/lib/types";
 import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/empty-state";
 import { StatCard } from "@/components/stat-card";
 import {
   Card,
@@ -87,17 +89,19 @@ export default async function EarningsPage() {
           tone="amber"
         />
       </div>
-      <div className="grid gap-5 lg:grid-cols-[.7fr_1.3fr]">
+      <div className="grid gap-6 lg:grid-cols-[.7fr_1.3fr]">
         <Card>
-          <CardHeader>
+          <CardHeader className="border-b">
             <CardTitle>Répartition des gains</CardTitle>
             <CardDescription>Commission et bonus cumulés</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
-              <div className="mb-2 flex justify-between text-sm">
-                <span>Commissions</span>
-                <strong>{formatCurrency(earnings.total_commission)}</strong>
+              <div className="mb-2 flex items-baseline justify-between gap-3 text-sm">
+                <span className="text-muted-foreground">Commissions</span>
+                <span className="tabular font-bold">
+                  {formatCurrency(earnings.total_commission)}
+                </span>
               </div>
               <Progress
                 value={
@@ -109,9 +113,11 @@ export default async function EarningsPage() {
               />
             </div>
             <div>
-              <div className="mb-2 flex justify-between text-sm">
-                <span>Bonus</span>
-                <strong>{formatCurrency(earnings.total_bonuses)}</strong>
+              <div className="mb-2 flex items-baseline justify-between gap-3 text-sm">
+                <span className="text-muted-foreground">Bonus</span>
+                <span className="tabular font-bold">
+                  {formatCurrency(earnings.total_bonuses)}
+                </span>
               </div>
               <Progress
                 value={
@@ -121,19 +127,26 @@ export default async function EarningsPage() {
                 }
               />
             </div>
-            <div className="rounded-xl bg-slate-950 p-5 text-white">
-              <p className="text-sm text-slate-400">Total acquis</p>
-              <p className="mt-1 text-3xl font-semibold">
+            <div className="rounded-xl bg-sidebar p-5 text-white shadow-raised">
+              <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-sidebar-muted">
+                <Trophy
+                  className="size-4 text-sidebar-primary"
+                  aria-hidden="true"
+                />
+                Total acquis
+              </p>
+              <p className="tabular mt-2 text-3xl font-bold tracking-tight">
                 {formatCurrency(earnings.total_earnings)}
               </p>
-              <p className="mt-3 text-xs text-slate-400">
-                Sur {earnings.paid_projects} projet(s) entièrement payé(s)
+              <p className="mt-3 border-t border-white/10 pt-3 text-xs text-sidebar-muted">
+                Sur <span className="tabular">{earnings.paid_projects}</span>{" "}
+                projet(s) entièrement payé(s)
               </p>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
+        <Card className="gap-0 pb-0">
+          <CardHeader className="border-b">
             <CardTitle>Détail par projet</CardTitle>
             <CardDescription>
               Le taux appliqué reste historique même si les règles changent.
@@ -144,10 +157,10 @@ export default async function EarningsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Projet</TableHead>
-                  <TableHead>Revenu</TableHead>
-                  <TableHead>Taux</TableHead>
-                  <TableHead>Commission</TableHead>
-                  <TableHead>Bonus</TableHead>
+                  <TableHead className="text-right">Revenu</TableHead>
+                  <TableHead className="text-right">Taux</TableHead>
+                  <TableHead className="text-right">Commission</TableHead>
+                  <TableHead className="text-right">Bonus</TableHead>
                   <TableHead>Acquis le</TableHead>
                 </TableRow>
               </TableHeader>
@@ -159,31 +172,43 @@ export default async function EarningsPage() {
                       <TableCell>
                         <Link
                           href={`/projects/${p.id}`}
-                          className="font-medium hover:text-blue-600"
+                          className="font-semibold hover:text-primary"
                         >
                           {p.name}
                         </Link>
-                        <p className="text-xs text-slate-500">
+                        <p className="mt-0.5 text-xs text-muted-foreground">
                           {p.clients?.company_name ?? p.clients?.contact_name}
                         </p>
                       </TableCell>
-                      <TableCell>{formatCurrency(p.payment_amount)}</TableCell>
-                      <TableCell>{p.commission_rate_applied}%</TableCell>
-                      <TableCell>
+                      <TableCell className="tabular text-right">
+                        {formatCurrency(p.payment_amount)}
+                      </TableCell>
+                      <TableCell className="tabular text-right text-muted-foreground">
+                        {p.commission_rate_applied}%
+                      </TableCell>
+                      <TableCell className="tabular text-right font-semibold text-success">
                         {formatCurrency(p.commission_amount)}
                       </TableCell>
-                      <TableCell>{formatCurrency(p.bonus_amount)}</TableCell>
-                      <TableCell>
-                        {formatDate(p.commission_locked_at)}
+                      <TableCell className="tabular text-right">
+                        {formatCurrency(p.bonus_amount)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        <time dateTime={p.commission_locked_at ?? undefined}>
+                          {formatDate(p.commission_locked_at)}
+                        </time>
                       </TableCell>
                     </TableRow>
                   ))}
               </TableBody>
             </Table>
             {!projects.some((p) => p.commission_locked_at) && (
-              <p className="p-10 text-center text-sm text-slate-500">
-                Aucun projet entièrement payé pour le moment.
-              </p>
+              <div className="p-5">
+                <EmptyState
+                  icon={Wallet}
+                  title="Aucun gain acquis"
+                  description="Aucun projet entièrement payé pour le moment."
+                />
+              </div>
             )}
           </CardContent>
         </Card>

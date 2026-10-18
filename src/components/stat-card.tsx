@@ -3,11 +3,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 const tones = {
-  blue: "bg-blue-50 text-blue-600",
-  green: "bg-emerald-50 text-emerald-600",
-  amber: "bg-amber-50 text-amber-600",
-  violet: "bg-violet-50 text-violet-600",
-  red: "bg-red-50 text-red-600",
+  blue: "bg-info-muted text-info",
+  green: "bg-success-muted text-success",
+  amber: "bg-warning-muted text-warning",
+  violet: "bg-violet-muted text-violet",
+  red: "bg-destructive-muted text-destructive",
 };
 
 export function StatCard({
@@ -24,22 +24,24 @@ export function StatCard({
   tone?: keyof typeof tones;
 }) {
   return (
-    <Card className="border-slate-200 shadow-sm">
-      <CardContent className="flex items-start gap-4 p-5">
+    <Card className="shadow-card transition-shadow duration-200 hover:shadow-raised">
+      <CardContent className="flex items-start justify-between gap-4 p-5">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-muted-foreground">{label}</p>
+          <p className="tabular mt-2 truncate text-2xl font-bold tracking-tight text-foreground">
+            {value}
+          </p>
+          {hint && (
+            <p className="mt-1.5 text-xs text-subtle-foreground">{hint}</p>
+          )}
+        </div>
         <div
           className={cn(
-            "grid size-11 shrink-0 place-items-center rounded-xl",
+            "grid size-10 shrink-0 place-items-center rounded-lg",
             tones[tone],
           )}
         >
-          <Icon className="size-5" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-sm text-slate-500">{label}</p>
-          <p className="mt-1 truncate text-2xl font-semibold tracking-tight">
-            {value}
-          </p>
-          {hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
+          <Icon className="size-5" aria-hidden="true" />
         </div>
       </CardContent>
     </Card>

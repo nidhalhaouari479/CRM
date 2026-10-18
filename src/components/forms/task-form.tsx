@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { ListChecks, Plus } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ListChecks, Plus } from "lucide-react";
 import { createTask } from "@/app/(dashboard)/actions";
 import type { Client, Profile, Project } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -30,10 +30,10 @@ export function TaskForm({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="border-b">
         <CardTitle className="flex items-center gap-2">
-          <ListChecks className="size-5 text-blue-600" />
-          Nouvelle tache
+          <ListChecks className="size-5 text-primary" aria-hidden="true" />
+          Nouvelle tâche
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -47,24 +47,24 @@ export function TaskForm({
           <FormGrid>
             <Field label="Statut" htmlFor="status">
               <NativeSelect id="status" name="status" defaultValue="Todo">
-                <option value="Todo">A faire</option>
+                <option value="Todo">À faire</option>
                 <option value="In Progress">En cours</option>
-                <option value="Blocked">Bloquee</option>
-                <option value="Done">Terminee</option>
+                <option value="Blocked">Bloquée</option>
+                <option value="Done">Terminée</option>
               </NativeSelect>
             </Field>
-            <Field label="Priorite" htmlFor="priority">
+            <Field label="Priorité" htmlFor="priority">
               <NativeSelect id="priority" name="priority" defaultValue="Medium">
                 <option value="Low">Faible</option>
                 <option value="Medium">Moyenne</option>
-                <option value="High">Elevee</option>
+                <option value="High">Élevée</option>
               </NativeSelect>
             </Field>
-            <Field label="Echeance" htmlFor="due_date">
+            <Field label="Échéance" htmlFor="due_date">
               <Input id="due_date" name="due_date" type="date" />
             </Field>
             {isAdmin ? (
-              <Field label="Assignee" htmlFor="assigned_to">
+              <Field label="Assignée à" htmlFor="assigned_to">
                 <NativeSelect
                   id="assigned_to"
                   name="assigned_to"
@@ -78,9 +78,13 @@ export function TaskForm({
                 </NativeSelect>
               </Field>
             ) : (
-              <input type="hidden" name="assigned_to" value={currentProfileId} />
+              <input
+                type="hidden"
+                name="assigned_to"
+                value={currentProfileId}
+              />
             )}
-            <Field label="Client lie" htmlFor="client_id">
+            <Field label="Client lié" htmlFor="client_id">
               <NativeSelect id="client_id" name="client_id" defaultValue="">
                 <option value="">Aucun client</option>
                 {clients.map((client) => (
@@ -90,7 +94,7 @@ export function TaskForm({
                 ))}
               </NativeSelect>
             </Field>
-            <Field label="Projet lie" htmlFor="project_id">
+            <Field label="Projet lié" htmlFor="project_id">
               <NativeSelect id="project_id" name="project_id" defaultValue="">
                 <option value="">Aucun projet</option>
                 {projects.map((project) => (
@@ -101,19 +105,35 @@ export function TaskForm({
               </NativeSelect>
             </Field>
           </FormGrid>
-          <div className="flex flex-wrap items-center gap-3">
+          {state.success && (
+            <div
+              role="status"
+              className="flex gap-3 rounded-lg border border-success/30 bg-success-muted p-3 text-sm text-success"
+            >
+              <CheckCircle2
+                className="mt-0.5 size-4 shrink-0"
+                aria-hidden="true"
+              />
+              <p>Tâche créée.</p>
+            </div>
+          )}
+          {state.error && (
+            <div
+              role="alert"
+              className="flex gap-3 rounded-lg border border-destructive/30 bg-destructive-muted p-3 text-sm text-destructive"
+            >
+              <AlertTriangle
+                className="mt-0.5 size-4 shrink-0"
+                aria-hidden="true"
+              />
+              <p>{state.error}</p>
+            </div>
+          )}
+          <div className="flex justify-end border-t pt-5">
             <Button type="submit" disabled={pending}>
-              <Plus />
-              {pending ? "Creation..." : "Creer la tache"}
+              <Plus aria-hidden="true" />
+              {pending ? "Création…" : "Créer la tâche"}
             </Button>
-            {state.success && (
-              <p className="text-sm text-emerald-700">Tache creee.</p>
-            )}
-            {state.error && (
-              <p role="alert" className="text-sm text-red-600">
-                {state.error}
-              </p>
-            )}
           </div>
         </form>
       </CardContent>

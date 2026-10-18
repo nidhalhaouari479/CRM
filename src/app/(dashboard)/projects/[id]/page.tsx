@@ -19,6 +19,7 @@ import { PaymentFormDialog } from "@/components/forms/payment-form-dialog";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -64,6 +65,9 @@ export default async function ProjectDetailPage({
     profiles: Pick<Profile, "first_name" | "last_name"> | null;
   };
   const payments = (paymentsData ?? []) as Payment[];
+  const totalEarned =
+    Number(project.commission_amount) + Number(project.bonus_amount);
+  const remaining = Number(project.remaining_amount);
   return (
     <div className="space-y-6">
       <PageHeader
@@ -76,13 +80,20 @@ export default async function ProjectDetailPage({
           />
         }
       />
-      <div className="flex flex-wrap items-center gap-3">
-        <StatusBadge value={project.status} />
-        <StatusBadge value={project.payment_status} />
-        <form action={updateProjectStatus} className="flex gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusBadge value={project.status} />
+          <StatusBadge value={project.payment_status} />
+        </div>
+        <form
+          action={updateProjectStatus}
+          aria-label="Modifier le statut du projet"
+          className="flex items-center gap-2"
+        >
           <input type="hidden" name="id" value={id} />
           <NativeSelect
             name="status"
+            aria-label="Statut du projet"
             defaultValue={project.status}
             className="w-44"
           >
@@ -104,7 +115,7 @@ export default async function ProjectDetailPage({
           </Button>
         </form>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Prix du projet"
           value={formatCurrency(project.final_price)}
@@ -124,139 +135,185 @@ export default async function ProjectDetailPage({
         />
         <StatCard
           label="Commission + bonus"
-          value={formatCurrency(
-            Number(project.commission_amount) + Number(project.bonus_amount),
-          )}
+          value={formatCurrency(totalEarned)}
           icon={BadgeDollarSign}
           tone="violet"
         />
       </div>
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader>
+          <CardHeader className="border-b">
             <CardTitle>Informations du projet</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-5 sm:grid-cols-2">
-            <Detail label="Client">
-              <Link
-                href={`/clients/${project.client_id}`}
-                className="font-medium text-blue-600 hover:underline"
-              >
-                {project.clients?.company_name ?? project.clients?.contact_name}
-              </Link>
-            </Detail>
-            <Detail label="Service">{frenchLabel(project.service_type)}</Detail>
-            <Detail label="Début">
-              <CalendarDays className="mr-2 inline size-4 text-slate-400" />
-              {formatDate(project.start_date)}
-            </Detail>
-            <Detail label="Fin prévue">
-              <Clock3 className="mr-2 inline size-4 text-slate-400" />
-              {formatDate(project.expected_end_date)}
-            </Detail>
-            <Detail label="Prix estimé">
-              {formatCurrency(project.estimated_price)}
-            </Detail>
-            <Detail label="Prix final">
-              {formatCurrency(project.final_price)}
-            </Detail>
-            {project.description && (
-              <div className="sm:col-span-2">
-                <p className="text-xs text-slate-500">Description</p>
-                <p className="mt-1 text-sm leading-6">{project.description}</p>
-              </div>
-            )}
+          <CardContent>
+            <dl className="grid gap-5 sm:grid-cols-2">
+              <Detail label="Client">
+                <Link
+                  href={`/clients/${project.client_id}`}
+                  className="font-semibold text-primary underline-offset-4 hover:underline"
+                >
+                  {project.clients?.company_name ??
+                    project.clients?.contact_name}
+                </Link>
+              </Detail>
+              <Detail label="Service">
+                {frenchLabel(project.service_type)}
+              </Detail>
+              <Detail label="Début">
+                <span className="inline-flex items-center gap-2">
+                  <CalendarDays
+                    aria-hidden="true"
+                    className="size-4 text-subtle-foreground"
+                  />
+                  <span className="tabular">
+                    {formatDate(project.start_date)}
+                  </span>
+                </span>
+              </Detail>
+              <Detail label="Fin prévue">
+                <span className="inline-flex items-center gap-2">
+                  <Clock3
+                    aria-hidden="true"
+                    className="size-4 text-subtle-foreground"
+                  />
+                  <span className="tabular">
+                    {formatDate(project.expected_end_date)}
+                  </span>
+                </span>
+              </Detail>
+              <Detail label="Prix estimé">
+                <span className="tabular">
+                  {formatCurrency(project.estimated_price)}
+                </span>
+              </Detail>
+              <Detail label="Prix final">
+                <span className="tabular">
+                  {formatCurrency(project.final_price)}
+                </span>
+              </Detail>
+              <Detail label="Reste à payer">
+                <span
+                  className={remaining > 0 ? "tabular text-warning" : "tabular"}
+                >
+                  {formatCurrency(project.remaining_amount)}
+                </span>
+              </Detail>
+              {project.description && (
+                <div className="sm:col-span-2">
+                  <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Description
+                  </dt>
+                  <dd className="mt-1 text-sm leading-6 text-foreground">
+                    {project.description}
+                  </dd>
+                </div>
+              )}
+            </dl>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
+          <CardHeader className="border-b">
             <CardTitle>Détail de la rémunération</CardTitle>
             <CardDescription>
               Les montants sont figés lorsque le projet est entièrement payé.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <EarningLine
-              label="Revenu éligible"
-              value={
-                project.commission_locked_at
-                  ? formatCurrency(project.payment_amount)
-                  : "En attente du paiement complet"
-              }
-            />
-            <EarningLine
-              label="Taux appliqué"
-              value={
-                project.commission_rate_applied == null
-                  ? "—"
-                  : `${project.commission_rate_applied} %`
-              }
-              icon={Percent}
-            />
-            <EarningLine
-              label="Commission"
-              value={formatCurrency(project.commission_amount)}
-            />
-            <EarningLine
-              label="Bonus"
-              value={formatCurrency(project.bonus_amount)}
-            />
-            <div className="flex justify-between border-t pt-4 text-lg font-semibold">
-              <span>Total gagné</span>
-              <span className="text-emerald-700">
-                {formatCurrency(
-                  Number(project.commission_amount) +
-                    Number(project.bonus_amount),
-                )}
-              </span>
-            </div>
+          <CardContent>
+            <dl className="space-y-3">
+              <EarningLine
+                label="Revenu éligible"
+                value={
+                  project.commission_locked_at
+                    ? formatCurrency(project.payment_amount)
+                    : "En attente du paiement complet"
+                }
+              />
+              <EarningLine
+                label="Taux appliqué"
+                value={
+                  project.commission_rate_applied == null
+                    ? "—"
+                    : `${project.commission_rate_applied} %`
+                }
+                icon={Percent}
+              />
+              <EarningLine
+                label="Commission"
+                value={formatCurrency(project.commission_amount)}
+              />
+              <EarningLine
+                label="Bonus"
+                value={formatCurrency(project.bonus_amount)}
+              />
+              <div className="flex items-baseline justify-between gap-4 border-t pt-4">
+                <dt className="text-sm font-semibold text-foreground">
+                  Total gagné
+                </dt>
+                <dd className="tabular text-2xl font-bold tracking-tight text-success">
+                  {formatCurrency(totalEarned)}
+                </dd>
+              </div>
+            </dl>
             {project.commission_locked_at && (
-              <p className="text-xs text-slate-500">
-                Calcul figé le {formatDate(project.commission_locked_at, true)}
+              <p className="mt-3 text-xs text-muted-foreground">
+                Calcul figé le{" "}
+                <time dateTime={project.commission_locked_at}>
+                  {formatDate(project.commission_locked_at, true)}
+                </time>
               </p>
             )}
           </CardContent>
         </Card>
       </div>
-      <Card>
-        <CardHeader>
+      <Card className="gap-0 pb-0">
+        <CardHeader className="border-b">
           <CardTitle>Historique des paiements</CardTitle>
           <CardDescription>
             Chaque versement enregistré sur ce projet
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0">
-          {payments.length ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Méthode</TableHead>
-                  <TableHead>Référence</TableHead>
-                  <TableHead>Notes</TableHead>
-                  <TableHead className="text-right">Montant</TableHead>
+        {payments.length ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Méthode</TableHead>
+                <TableHead>Référence</TableHead>
+                <TableHead>Notes</TableHead>
+                <TableHead className="text-right">Montant</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {payments.map((payment) => (
+                <TableRow key={payment.id}>
+                  <TableCell className="tabular">
+                    <time dateTime={payment.payment_date}>
+                      {formatDate(payment.payment_date)}
+                    </time>
+                  </TableCell>
+                  <TableCell>{frenchLabel(payment.payment_method)}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {payment.reference || "—"}
+                  </TableCell>
+                  <TableCell className="max-w-xs truncate text-muted-foreground">
+                    {payment.notes || "—"}
+                  </TableCell>
+                  <TableCell className="tabular text-right font-semibold text-success">
+                    {formatCurrency(payment.amount)}
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {payments.map((payment) => (
-                  <TableRow key={payment.id}>
-                    <TableCell>{formatDate(payment.payment_date)}</TableCell>
-                    <TableCell>{frenchLabel(payment.payment_method)}</TableCell>
-                    <TableCell>{payment.reference || "—"}</TableCell>
-                    <TableCell>{payment.notes || "—"}</TableCell>
-                    <TableCell className="text-right font-semibold text-emerald-700">
-                      {formatCurrency(payment.amount)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <p className="p-10 text-center text-sm text-slate-500">
-              Aucun paiement enregistré.
-            </p>
-          )}
-        </CardContent>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="p-5">
+            <EmptyState
+              icon={Banknote}
+              title="Aucun paiement enregistré"
+              description="Les versements ajoutés à ce projet apparaîtront ici."
+            />
+          </div>
+        )}
       </Card>
     </div>
   );
@@ -271,8 +328,10 @@ function Detail({
 }) {
   return (
     <div>
-      <p className="text-xs text-slate-500">{label}</p>
-      <div className="mt-1 text-sm font-medium">{children}</div>
+      <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+        {label}
+      </dt>
+      <dd className="mt-1 text-sm font-medium text-foreground">{children}</dd>
     </div>
   );
 }
@@ -286,12 +345,17 @@ function EarningLine({
   icon?: typeof Percent;
 }) {
   return (
-    <div className="flex items-center justify-between text-sm">
-      <span className="text-slate-500">{label}</span>
-      <span className="font-medium">
-        {Icon && <Icon className="mr-1 inline size-3.5" />}
+    <div className="flex items-center justify-between gap-4 text-sm">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="tabular inline-flex items-center gap-1 font-medium">
+        {Icon && (
+          <Icon
+            aria-hidden="true"
+            className="size-3.5 text-subtle-foreground"
+          />
+        )}
         {value}
-      </span>
+      </dd>
     </div>
   );
 }

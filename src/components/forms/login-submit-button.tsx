@@ -10,7 +10,7 @@ export function LoginSubmitButton({ disabled = false }: { disabled?: boolean }) 
   return (
     <Button
       type="submit"
-      className="w-full"
+      className="h-11 w-full"
       size="lg"
       disabled={disabled || pending}
     >

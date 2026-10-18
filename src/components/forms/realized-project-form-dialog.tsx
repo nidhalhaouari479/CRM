@@ -252,11 +252,11 @@ function RealizedProjectImagesInput({
                   className="size-12 rounded-md object-cover"
                 />
               ) : (
-                <div className="flex size-12 items-center justify-center rounded-md bg-muted text-xs font-medium text-slate-600">
+                <div className="flex size-12 items-center justify-center rounded-md bg-muted text-xs font-medium text-muted-foreground">
                   {image.label}
                 </div>
               )}
-              <p className="min-w-0 flex-1 truncate text-sm text-slate-600">
+              <p className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
                 {image.label}
               </p>
               <Button
@@ -276,7 +276,11 @@ function RealizedProjectImagesInput({
           ))}
         </div>
       )}
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -301,7 +305,7 @@ function ProjectCategoriesSelect({
     <div className="space-y-2">
       <p className="text-sm font-medium">Categories</p>
       <select
-        className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="h-9 w-full rounded-lg border border-input bg-card px-3 py-1 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         value=""
         required={!categories.length}
         onChange={(event) => {
@@ -371,7 +375,7 @@ function UrlOrStatusInput({
   return (
     <div className="grid gap-2">
       <select
-        className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="h-9 w-full rounded-lg border border-input bg-card px-3 py-1 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         value={mode}
         onChange={(event) =>
           setMode(event.target.value as typeof mode)
@@ -413,18 +417,18 @@ export function RealizedProjectFormDialog({
   const [imagesUploading, setImagesUploading] = useState(false);
   const isEditing = !!project;
   const action = isEditing ? updateRealizedProject : createRealizedProject;
-  const submitLabel = isEditing ? "Modifier le projet realise" : "Creer le projet realise";
+  const submitLabel = isEditing ? "Modifier le projet réalisé" : "Créer le projet réalisé";
 
   return (
     <Dialog>
       <DialogTrigger render={<Button variant={isEditing ? "outline" : "default"} />}>
         {isEditing ? <Pencil /> : <ImagePlus />}
-        {isEditing ? "Modifier" : "Ajouter un projet realise"}
+        {isEditing ? "Modifier" : "Ajouter un projet réalisé"}
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? "Modifier le projet realise" : "Nouveau projet realise"}
+            {isEditing ? "Modifier le projet réalisé" : "Nouveau projet réalisé"}
           </DialogTitle>
           <DialogDescription>
             Ajoutez un projet livre avec ses stacks, liens et visuels.
@@ -532,7 +536,7 @@ export function RealizedProjectFormDialog({
           />
           <DialogFooter>
             <SubmitButton
-              pendingLabel={imagesUploading ? "Upload images..." : "Creation..."}
+              pendingLabel={imagesUploading ? "Upload images..." : "Création…"}
               disabled={imagesUploading}
             >
               {submitLabel}

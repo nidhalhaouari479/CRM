@@ -1,14 +1,15 @@
 import { frenchLabel } from "@/lib/labels";
 import Link from "next/link";
-import { MessageSquareText, Search } from "lucide-react";
+import { MessageSquareText, Search, SlidersHorizontal } from "lucide-react";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import type { Interaction } from "@/lib/types";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/empty-state";
+import { EntityAvatar } from "@/components/entity-avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/forms/form-fields";
 import {
@@ -61,101 +62,125 @@ export default async function InteractionsPage({
         title="Interactions"
         description="Historique des messages, emails, telephones et meetings."
       />
-      <Card>
-        <CardContent className="p-4">
-          <form className="flex flex-col gap-3 md:flex-row">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-              <Input
-                name="q"
-                defaultValue={params.q}
-                className="pl-9"
-                placeholder="Client, objectif, resultat ou conclusion"
-              />
-            </div>
-            <NativeSelect
-              name="type"
-              defaultValue={params.type}
-              className="md:w-48"
-            >
-              <option value="">Tous les types</option>
-              {interactionTypes.map((v) => (
-                <option key={v} value={v}>
-                  {frenchLabel(v)}
-                </option>
-              ))}
-            </NativeSelect>
-            <Button variant="outline">Filtrer</Button>
-          </form>
-        </CardContent>
-      </Card>
-      <Card className="overflow-hidden">
-        <CardContent className="p-0">
-          {rows.length ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Employe</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Duree</TableHead>
-                  <TableHead>Objectif</TableHead>
-                  <TableHead>Résultat</TableHead>
-                  <TableHead>Conclusion</TableHead>
-                  <TableHead>Score</TableHead>
-                  <TableHead>Prochaine action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((item) => (
+      <Card className="gap-0 py-0">
+        <form
+          role="search"
+          aria-label="Filtrer les interactions"
+          className="flex flex-col gap-3 border-b p-4 md:flex-row md:items-center"
+        >
+          <div className="relative flex-1">
+            <Search
+              aria-hidden="true"
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground"
+            />
+            <Input
+              name="q"
+              type="search"
+              aria-label="Rechercher une interaction"
+              defaultValue={params.q}
+              className="pl-9"
+              placeholder="Client, objectif, resultat ou conclusion"
+            />
+          </div>
+          <NativeSelect
+            name="type"
+            aria-label="Type d'interaction"
+            defaultValue={params.type}
+            className="md:w-48"
+          >
+            <option value="">Tous les types</option>
+            {interactionTypes.map((v) => (
+              <option key={v} value={v}>
+                {frenchLabel(v)}
+              </option>
+            ))}
+          </NativeSelect>
+          <Button variant="outline">
+            <SlidersHorizontal aria-hidden="true" />
+            Filtrer
+          </Button>
+        </form>
+        {rows.length ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Client</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Employe</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead className="text-right">Duree</TableHead>
+                <TableHead>Objectif</TableHead>
+                <TableHead>Résultat</TableHead>
+                <TableHead>Conclusion</TableHead>
+                <TableHead className="text-right">Score</TableHead>
+                <TableHead>Prochaine action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((item) => {
+                const clientName =
+                  item.clients?.company_name ?? item.clients?.contact_name;
+                return (
                   <TableRow key={item.id}>
-                    <TableCell>{formatDate(item.date, true)}</TableCell>
                     <TableCell>
+                      <div className="flex items-center gap-3">
+                        <EntityAvatar name={clientName} />
+                        <Link
+                          href={`/clients/${item.client_id}`}
+                          className="font-semibold text-foreground underline-offset-4 hover:text-primary hover:underline"
+                        >
+                          {clientName}
+                        </Link>
+                      </div>
+                    </TableCell>
+                    <TableCell className="tabular whitespace-nowrap text-muted-foreground">
+                      <time dateTime={item.date}>
+                        {formatDate(item.date, true)}
+                      </time>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
                       {item.profiles
                         ? `${item.profiles.first_name} ${item.profiles.last_name}`
                         : "—"}
                     </TableCell>
-                    <TableCell>
-                      <Link
-                        href={`/clients/${item.client_id}`}
-                        className="font-medium hover:text-blue-600"
-                      >
-                        {item.clients?.company_name ??
-                          item.clients?.contact_name}
-                      </Link>
-                    </TableCell>
                     <TableCell>{frenchLabel(item.type)}</TableCell>
-                    <TableCell>
+                    <TableCell className="tabular text-right text-muted-foreground">
                       {item.duration_minutes != null
                         ? `${item.duration_minutes} min`
                         : "—"}
                     </TableCell>
-                    <TableCell className="max-w-xs truncate">
+                    <TableCell className="max-w-xs truncate font-medium">
                       {item.objective}
                     </TableCell>
-                    <TableCell className="max-w-xs truncate text-xs text-slate-600">
+                    <TableCell className="max-w-xs truncate text-muted-foreground">
                       {item.result}
                     </TableCell>
-                    <TableCell className="max-w-xs truncate text-xs text-slate-600">
+                    <TableCell className="max-w-xs truncate text-muted-foreground">
                       {item.conclusion || "—"}
                     </TableCell>
-                    <TableCell>{item.interest_score}/10</TableCell>
-                    <TableCell>{item.next_action ?? "—"}</TableCell>
+                    <TableCell className="tabular text-right font-semibold">
+                      {item.interest_score}
+                      <span className="font-normal text-subtle-foreground">
+                        /10
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {item.next_action ?? "—"}
+                    </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="p-5">
-              <EmptyState
-                icon={MessageSquareText}
-                title="Aucune interaction"
-                description="Les interactions sont ajoutees depuis la fiche d'un client."
-              />
-            </div>
-          )}
-        </CardContent>
+                );
+              })}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="p-5">
+            <EmptyState
+              icon={MessageSquareText}
+              title="Aucune interaction"
+              description="Les interactions sont ajoutees depuis la fiche d'un client."
+            />
+          </div>
+        )}
       </Card>
     </div>
   );

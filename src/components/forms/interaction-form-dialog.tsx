@@ -128,12 +128,12 @@ export function InteractionFormDialog({ clientId }: { clientId: string }) {
             </Button>
           </DialogFooter>
           {state.error && (
-            <p role="alert" className="text-sm text-red-600">
+            <p role="alert" className="text-sm text-destructive">
               {state.error}
             </p>
           )}
           {state.success && (
-            <p role="status" className="text-sm text-emerald-700">
+            <p role="status" className="text-sm text-success">
               Interaction enregistrée.
             </p>
           )}
