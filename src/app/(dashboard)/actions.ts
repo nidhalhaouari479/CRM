@@ -6,7 +6,10 @@ import { z } from "zod";
 import { requireAdmin, requireProfile } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
-import { REALIZED_PROJECT_CATEGORIES } from "@/lib/types";
+import {
+  PROJECT_REQUEST_STATUSES,
+  REALIZED_PROJECT_CATEGORIES,
+} from "@/lib/types";
 
 z.config(z.locales.fr());
 
@@ -901,6 +904,27 @@ export async function updateComplaintStatus(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/admin/reclamations");
   revalidatePath("/reclamations");
+}
+
+export async function updateProjectRequestStatus(formData: FormData) {
+  const profile = await requireProfile();
+  const id = text(formData.get("id"));
+  const status = text(formData.get("status"));
+  z.object({
+    id: z.uuid(),
+    status: z.enum(PROJECT_REQUEST_STATUSES),
+  }).parse({ id, status });
+  const supabase = await createServerClient();
+  const { error } = await supabase
+    .from("project_requests")
+    .update({
+      status,
+      handled_by: profile.id,
+      handled_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/project-requests");
 }
 
 export async function updateProjectStatus(formData: FormData) {

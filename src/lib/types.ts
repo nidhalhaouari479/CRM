@@ -159,6 +159,32 @@ export interface Complaint {
   profiles?: Pick<Profile, "first_name" | "last_name" | "email"> | null;
 }
 
+export const PROJECT_REQUEST_STATUSES = [
+  "New",
+  "Contacted",
+  "Converted",
+  "Lost",
+] as const;
+
+export interface ProjectRequest {
+  id: string;
+  name: string;
+  company: string | null;
+  email: string;
+  phone: string | null;
+  project_type: string;
+  timeline: string | null;
+  budget: string | null;
+  message: string;
+  status: (typeof PROJECT_REQUEST_STATUSES)[number];
+  source: string | null;
+  handled_by: string | null;
+  handled_at: string | null;
+  created_at: string;
+  updated_at: string;
+  profiles?: Pick<Profile, "first_name" | "last_name"> | null;
+}
+
 export interface Task {
   id: string;
   title: string;

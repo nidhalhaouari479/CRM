@@ -1,15 +1,16 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BadgeDollarSign,
   BarChart3,
   BriefcaseBusiness,
-  Building2,
   Contact,
   Gift,
   Images,
+  Inbox,
   LayoutDashboard,
   ListChecks,
   type LucideIcon,
@@ -29,6 +30,7 @@ type NavSection = { title: string; items: NavItem[] };
 
 const workspace: NavItem[] = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
+  { href: "/project-requests", label: "Demandes web", icon: Inbox },
   { href: "/clients", label: "Clients", icon: Contact },
   { href: "/projects", label: "Projets", icon: BriefcaseBusiness },
   { href: "/tasks", label: "Tâches", icon: ListChecks },
@@ -100,15 +102,20 @@ export function AppSidebar({
         onClick={onNavigate}
         className="flex h-16 shrink-0 items-center gap-3 border-b border-sidebar-border px-5 focus-visible:outline-sidebar-ring"
       >
-        <span className="grid size-9 place-items-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-          <Building2 className="size-5" aria-hidden="true" />
-        </span>
+        <Image
+          src="/cdf-icon.png"
+          alt="CDF"
+          width={512}
+          height={512}
+          priority
+          className="size-9 shrink-0 rounded-lg"
+        />
         <span className="min-w-0">
           <span className="block truncate text-sm font-semibold leading-tight text-white">
-            Gestion clients
+            CRM CDF-Solution
           </span>
           <span className="mt-0.5 block text-xs text-sidebar-muted">
-            Tunisie · CRM
+            Software Solutions
           </span>
         </span>
       </Link>

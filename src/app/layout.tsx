@@ -13,8 +13,8 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "Gestion clients Tunisie",
-    template: "%s · Gestion clients Tunisie",
+    default: "CRM CDF-Solution",
+    template: "%s · CRM CDF-Solution",
   },
   description:
     "Gestion interne des clients, projets, paiements et commissions.",

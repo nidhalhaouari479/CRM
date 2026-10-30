@@ -42,7 +42,7 @@ export default async function SettingsPage() {
       .limit(12),
   ]);
   const settings = (settingsData ?? {
-    company_name: "CRM Tunisie",
+    company_name: "CRM CDF-Solution",
     currency: "TND",
     locale: "fr-TN",
   }) as Settings;

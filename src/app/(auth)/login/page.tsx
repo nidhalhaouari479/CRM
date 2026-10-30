@@ -1,10 +1,10 @@
 import {
   AlertTriangle,
   BarChart3,
-  Building2,
   ShieldCheck,
   Users,
 } from "lucide-react";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { signIn } from "@/app/(auth)/actions";
 import { getCurrentProfile } from "@/lib/auth";
@@ -51,15 +51,20 @@ export default async function LoginPage({
           className="absolute inset-0 bg-[linear-gradient(to_right,rgb(255_255_255/0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgb(255_255_255/0.04)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_at_top_left,black_30%,transparent_75%)]"
         />
         <div className="relative flex items-center gap-3">
-          <span className="grid size-10 place-items-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-            <Building2 className="size-5" aria-hidden="true" />
-          </span>
+          <Image
+            src="/cdf-icon.png"
+            alt="CDF"
+            width={512}
+            height={512}
+            priority
+            className="size-10 rounded-lg"
+          />
           <span>
             <span className="block font-semibold leading-tight">
-              Gestion clients
+              CRM CDF-Solution
             </span>
             <span className="block text-xs text-sidebar-muted">
-              Tunisie · CRM
+              Software Solutions
             </span>
           </span>
         </div>
@@ -99,10 +104,15 @@ export default async function LoginPage({
       <section className="flex items-center justify-center px-4 py-10 sm:px-10">
         <div className="w-full max-w-sm">
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <span className="grid size-10 place-items-center rounded-lg bg-sidebar text-sidebar-primary">
-              <Building2 className="size-5" aria-hidden="true" />
-            </span>
-            <span className="font-semibold">Gestion clients Tunisie</span>
+            <Image
+              src="/cdf-icon.png"
+              alt="CDF"
+              width={512}
+              height={512}
+              priority
+              className="size-10 rounded-lg ring-1 ring-border"
+            />
+            <span className="font-semibold">CRM CDF-Solution</span>
           </div>
 
           <h2 className="text-2xl font-bold tracking-tight">Bon retour</h2>
